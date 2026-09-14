@@ -52,25 +52,25 @@ void light_mode_update()
     buttons_update();
 
     //Switch light
-    if (button_just_pressed(SWITCH_LIGHT))
+    if (switch_light_state())
+    {
+        if (!lighting_is_on())
+        {
+            lighting_on(colors[selectedColor]);
+            Serial.println("Lumiere ON");
+        }
+    }
+    else
     {
         if (lighting_is_on())
         {
             lighting_off();
 
-            //Reset the setting mode and validation state when the light is turned off
             settingMode = false;
             validateButtonWasPressed = false;
 
             Serial.println("Lumiere OFF");
         }
-        else
-        {
-            lighting_on(colors[selectedColor]);
-
-            Serial.println("Lumiere ON");
-        }
-        return;
     }
 
     // Setting mode

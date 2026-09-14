@@ -19,6 +19,10 @@ bool justPressedState[4] = {false, false, false, false};
 unsigned long lastChangeTime[4] = {0, 0, 0, 0};
 unsigned long lastPressTime[4] = {0, 0, 0, 0};
 
+bool switch_light_state()
+{
+    return digitalRead(SWITCH_LIGHT_PIN) == HIGH;
+}
 
 int getButtonPin(Button button)
 {

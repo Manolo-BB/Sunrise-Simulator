@@ -1,5 +1,5 @@
 # Sunrise-Simulator
-The aim of this project is to create a sunrise simulator to replace my mobile phone as an alarm clock. It works independently, without the need for an app.
+The aim of this project is to create a sunrise simulator to replace my mobile phone as an alarm clock. It works independently, without the need for an app. A second aim is to be cheaper than the alarm clocks currently available on the market, whilst still incorporating all the features I want.
 
 ## License
 
@@ -30,11 +30,26 @@ See the [LICENSE](./LICENSE) file for details.
 - Selecting the brightness level
 
 ## Material
-- Microcontroleur (ESP32)
-- Module RTC
-- Hauts parleurs
-- Ecran d'affichage
-- Boutons
-- Leds
-- Module de gestion de la puissance
+The idea is to reuse personal items rather than buying new ones; that is why some components may not be optimised. The whole project is designed to work with a 12V LED strip.
 
+### Hardware
+
+| Function                       | Component                                              |          Price |
+| ------------------------------ | ------------------------------------------------------ | -------------: |
+| Microcontroller / Main Control | ESP32 DevKit V1                                        |          €5.99 |
+| Lighting                       | WS2812B LED Strip                                      | Personal stock |
+| Power Supply                   | 12 V – 1.5 A AC/DC Power Supply                        |    Second-hand |
+| Power Connector                | DC Female PCB Connector                                |          €0.32 |
+| Voltage Regulation             | MP1584EN Buck Converter                                |          €1.15 |
+| **Audio / Alarm**              | MAX98357A Audio Amplifier                              |          €1.72 |
+|                                | 4 Ω – 3 W Speaker                                      | Personal stock |
+|                                | Micro SD / TF / SD Mini Card Reader – SPI, 3.3 V / 5 V |          €2.07 |
+| **Display**                    | 2.9" E-Ink / E-Paper Display – SPI https://github.com/WeActStudio/WeActStudio.EpaperModule/tree/master                    |         €13.54 |
+| **Backlight**                  | 2 White LEDs + Diffuser                                | Personal stock |
+| **Navigation**                 | Bipolar Toggle Switch                                  |          €1.50 |
+|                                | 4 Momentary Push Buttons                               |          €8.53 |
+| **RTC**                        | DS3231 Real-Time Clock Module                          |          €6.79 |
+| **Power Path Controller**      | MCP73871                                               |          €4.90 |
+|                                | 18650 Battery                                      |         €12.90 |
+|                                | Battery Adapter                                        |          €1.02 |
+|                                | **Total**                                              |      **€62.42** |

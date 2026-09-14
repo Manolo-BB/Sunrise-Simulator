@@ -21,4 +21,6 @@ bool button_just_pressed(Button button);
 // Retourne true lorsque le bouton est maintenu
 bool button_is_held(Button button);
 
+bool switch_light_state();
+
 #endif
