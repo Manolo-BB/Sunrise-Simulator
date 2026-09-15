@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "lighting.h"
+#include "config.h"
 
-#define LIGHT_PIN   23
 #define NUM_LEDS    67
 #define BRIGHTNESS  30
 

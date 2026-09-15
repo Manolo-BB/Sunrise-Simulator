@@ -1,16 +1,12 @@
 #include <Arduino.h>
 #include "button.h"
+#include "config.h"
 
 #define DEBOUNCE_TIME 30
 
 // Temps minimum entre deux appuis validés
 #define SWITCH_LOCK_TIME 250
 #define ADJUST_LOCK_TIME 150
-
-#define SWITCH_LIGHT_PIN    5
-#define BUTTON_PLUS_PIN     4
-#define BUTTON_MINUS_PIN    16
-#define BUTTON_VALIDATE_PIN 17
 
 bool rawState[4] = {false, false, false, false};
 bool stableState[4] = {false, false, false, false};
