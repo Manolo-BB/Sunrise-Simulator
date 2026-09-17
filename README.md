@@ -45,7 +45,7 @@ The idea is to reuse personal items rather than buying new ones; that is why som
 |                                | 4 Ω – 3 W Speaker                                      | Personal stock |
 |                                | Micro SD / TF / SD Mini Card Reader – SPI, 3.3 V / 5 V |          €2.07 |
 | **Display**                    | 2.9" E-Ink / E-Paper Display – SPI https://github.com/WeActStudio/WeActStudio.EpaperModule/tree/master                    |         €13.54 |
-| **Backlight**                  | 2 White LEDs + Diffuser                                | Personal stock |
+| **Backlight**                  | 2 White LEDs + Diffuser + R (100Ohm and 100kOhm) + transistor BS170                  | Personal stock |
 | **Navigation**                 | Bipolar Toggle Switch                                  |          €1.50 |
 |                                | 4 Momentary Push Buttons                               |          €8.53 |
 | **RTC**                        | DS3231 Real-Time Clock Module                          |          €6.79 |

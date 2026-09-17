@@ -11,9 +11,7 @@ display(
     )
 );
 
-static int fakeHour = 7;
-static int fakeMinute = 30;
-static unsigned long fakeLastUpdate = 0;
+static bool firstDisplay = true;
 
 // Initialisation
 void screen_init()
@@ -29,6 +27,7 @@ void screen_init()
         display.fillScreen(GxEPD_WHITE);
     }
     while (display.nextPage());
+    display.hibernate();
 }
 
 //Hour and minute display
@@ -57,30 +56,27 @@ void screen_show_time(int hour, int minute)
     int16_t y =
         (display.height() - tbh) / 2 - tby;
 
+    display.setRotation(3);
+    display.setFullWindow();
+    
     display.firstPage();
 
     do
     {
         display.fillScreen(GxEPD_WHITE);
-
         display.setTextColor(GxEPD_BLACK);
         display.setFont(&FreeMonoBold24pt7b);
-
         display.setCursor(x, y);
-
         display.print(timeText);
     }
     while (display.nextPage());
+    display.hibernate();
 }
 
 
 //Add a function to draw an alarm icon with a number in the center
 //This function was maid by an LLM
-static void draw_alarm_icon(
-    int16_t x,
-    int16_t y,
-    uint8_t alarmNumber
-)
+static void draw_alarm_icon(int16_t x, int16_t y, uint8_t alarmNumber)
 {
     // Body
     display.fillCircle(
@@ -179,6 +175,7 @@ void screen_show_alarm(uint8_t alarmNumber)
         draw_alarm_icon( 5, 5, alarmNumber);
     }
     while (display.nextPage());
+    display.hibernate();
 }
 
 // Display active alarms
@@ -224,51 +221,35 @@ void screen_show_active_alarms( bool alarm1, bool alarm2, bool alarm3, bool alar
         }
     }
     while (display.nextPage());
+    display.hibernate();
 }
 
-void screen_show_home(
-    int hour,
-    int minute,
-    bool alarm1,
-    bool alarm2,
-    bool alarm3,
-    bool alarm4,
-    bool alarm5
-)
+void screen_show_home(int hour, int minute, bool alarm1, bool alarm2, bool alarm3, bool alarm4, bool alarm5)
 {
     char timeText[6];
 
-    snprintf(
-        timeText,
-        sizeof(timeText),
-        "%02d:%02d",
-        hour,
-        minute
-    );
-
+    snprintf( timeText, sizeof(timeText), "%02d:%02d", hour, minute);
     display.setRotation(3);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setTextColor(GxEPD_BLACK);
-
-    // Calcul de la position de l'heure
-    int16_t tbx, tby;
-    uint16_t tbw, tbh;
-
-    
-    display.getTextBounds( timeText, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-    int16_t timeX =
-        (display.width() - tbw) / 2 - tbx;
-
-    int16_t timeY =
-        (display.height() - tbh) / 2 - tby;
-
-    static bool firstDisplay = true;
 
     if (firstDisplay)
     {
         firstDisplay = false;
         display.setFullWindow();
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setTextColor(GxEPD_BLACK);
+
+        //Position of the time text
+        int16_t tbx, tby;
+        uint16_t tbw, tbh;
+
+        display.getTextBounds( timeText, 0, 0, &tbx, &tby, &tbw, &tbh);
+
+        int16_t timeX =
+            (display.width() - tbw) / 2 - tbx;
+
+        int16_t timeY =
+            (display.height() - tbh) / 2 - tby;
+
         display.firstPage();
 
         do
@@ -317,9 +298,31 @@ void screen_show_home(
 
         }
         while (display.nextPage());
-
+        display.hibernate();
         return;
     }
+
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setTextColor(GxEPD_BLACK);
+
+    int16_t tbx, tby;
+    uint16_t tbw, tbh;
+
+    display.getTextBounds(
+        timeText,
+        0,
+        0,
+        &tbx,
+        &tby,
+        &tbw,
+        &tbh
+    );
+
+    int16_t timeX =
+        (display.width() - tbw) / 2 - tbx;
+
+    int16_t timeY =
+        (display.height() - tbh) / 2 - tby;
 
     const int16_t timeWindowX = 55;
     const int16_t timeWindowY = 40;
@@ -353,34 +356,6 @@ void screen_show_home(
 
     }
     while (display.nextPage());
-}
 
-// fake screen update for testing purposes
-void fake_screen()
-{
-    if (millis() - fakeLastUpdate >= 10000 || fakeLastUpdate == 0)
-    {
-        fakeLastUpdate = millis();
-
-        screen_show_home(
-            fakeHour,
-            fakeMinute,
-            true,   // réveil 1
-            false,  // réveil 2
-            true,  // réveil 3
-            true,  // réveil 4
-            false    // réveil 5
-        );
-
-        fakeMinute++;
-
-        if (fakeMinute >= 60)
-        {
-            fakeMinute = 0;
-            fakeHour++;
-
-            if (fakeHour >= 24)
-                fakeHour = 0;
-        }
-    }
+    display.hibernate();
 }

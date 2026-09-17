@@ -18,7 +18,8 @@ void lighting_init()
 {
     FastLED.addLeds<WS2812B, LIGHT_PIN, GRB>(leds, NUM_LEDS);
     FastLED.setBrightness(BRIGHTNESS);
-
+    pinMode(BACKLIGHT_PIN, OUTPUT);
+    digitalWrite(BACKLIGHT_PIN, LOW);
     lighting_off();
 }
 

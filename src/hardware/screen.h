@@ -35,6 +35,4 @@ void screen_show_home(
     bool alarm5
 );
 
-void fake_screen();
-
 #endif

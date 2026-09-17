@@ -1,11 +1,4 @@
-#include <Arduino.h>
-
 #include "light_mode.h"
-#include "../lighting/lighting.h"
-#include "../hardware/button.h"
-
-#define VALIDATION_TIME 1000
-#define NUMBER_OF_COLORS 7
 
 CRGB colors[NUMBER_OF_COLORS] =
 {
@@ -49,8 +42,7 @@ void light_mode_init()
 // Update the LED's colour and brightness
 void light_mode_update()
 {
-    buttons_update();
-
+    
     //Switch light
     if (switch_light_state())
     {
@@ -218,5 +210,30 @@ void light_mode_update()
                 Serial.println("Appui trop court");
             }
         }
+    }
+}
+
+void backlight_update()
+{
+    static unsigned long backlightStartTime = 0;
+    static bool backlightActive = false;
+
+    if (switch_light_state())
+    {
+        digitalWrite(BACKLIGHT_PIN, LOW);
+        backlightActive = false;
+        return;
+    }
+    if (button_just_pressed(BUTTON_VALIDATE))
+    {
+        digitalWrite(BACKLIGHT_PIN, HIGH);
+
+        backlightStartTime = millis();
+        backlightActive = true;
+    }
+    if (backlightActive && millis() - backlightStartTime >= 3000)
+    {
+        digitalWrite(BACKLIGHT_PIN, LOW);
+        backlightActive = false;
     }
 }
