@@ -1,9 +1,3 @@
-/*
-RTC MANAGEMENT
-
-This file contains the implementation of RTC management functions for the hardware.
- 
- */ 
 #include "rtc.h"
 
 RTC_DS3231 rtc;
@@ -28,6 +22,7 @@ static void rtc_sync_from_ds3231()
 
     Serial.print("Synchronisation RTC : ");
 
+    //Add 0 when the hour or minute is less than 10 to allow 09:06
     if (rtcHour < 10)
         Serial.print("0");
 
@@ -37,13 +32,7 @@ static void rtc_sync_from_ds3231()
     if (rtcMinute < 10)
         Serial.print("0");
 
-    Serial.print(rtcMinute);
-    Serial.print(":");
-
-    if (rtcSecond < 10)
-        Serial.print("0");
-
-    Serial.println(rtcSecond);
+    Serial.println(rtcMinute);
 }
 
 void rtc_init()
@@ -71,9 +60,7 @@ void rtc_update()
     if (currentMillis - lastSecondUpdate >= 1000)
     {
         lastSecondUpdate += 1000;
-
         rtcSecond++;
-
         if (rtcSecond >= 60)
         {
             rtcSecond = 0;
@@ -90,7 +77,7 @@ void rtc_update()
         }
     }
 
-    //real RTC update every 10h
+    //real RTC update every RTC_SYNC_INTERVAL seconds
     if (currentMillis - lastRtcSync >= RTC_SYNC_INTERVAL)
     {
         rtc_sync_from_ds3231();

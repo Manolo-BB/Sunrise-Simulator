@@ -20,7 +20,7 @@ SDA(MOSI)=23
 #define BUTTON_PLUS_PIN     15
 #define BUTTON_MINUS_PIN    32
 #define BUTTON_VALIDATE_PIN 4
-#define BUTTON_PARAM_PIN    35
+#define BUTTON_PARAM_PIN    33
 
 //RTC pins
 #define RTC_SDA 27  

@@ -12,5 +12,7 @@
 void light_mode_init();
 void light_mode_update();
 void backlight_update();
+void switch_managment();
+void setting_mode();
 
 #endif

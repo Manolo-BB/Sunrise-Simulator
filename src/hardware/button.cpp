@@ -2,7 +2,6 @@
 
 // Minimal time between two accepted presses for each button
 #define LOCK_TIME 150
-
 #define DEBOUNCE_TIME 30
 
 bool rawState[5] = {false, false, false, false, false};
@@ -44,7 +43,7 @@ void buttons_init()
     pinMode(BUTTON_PLUS_PIN, INPUT_PULLUP);
     pinMode(BUTTON_MINUS_PIN, INPUT_PULLUP);
     pinMode(BUTTON_VALIDATE_PIN, INPUT_PULLUP);
-    pinMode(BUTTON_PARAM_PIN, INPUT_PULLUP);
+    pinMode(BUTTON_PARAM_PIN, INPUT_PULLUP); 
 
     unsigned long now = millis();
 
@@ -62,9 +61,10 @@ void buttons_update()
 {
     unsigned long now = millis();
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 1; i < 5; i++)
     {
         Button button = (Button)i;
+        button_clear_press(button);
 
         bool currentRaw = digitalRead(getButtonPin(button)) == LOW;
 
@@ -99,20 +99,18 @@ void buttons_update()
     }
 }
 
-
 bool button_pressed(Button button)
 {
     return stableState[button];
 }
 
-
 bool button_just_pressed(Button button)
 {
-    if (justPressedState[button])
-    {
-        justPressedState[button] = false;
-        return true;
-    }
+    return justPressedState[button];
+}
 
-    return false;
+//Avoid problems caused by using the same button for different functions
+void button_clear_press(Button button)
+{
+    justPressedState[button] = false;
 }

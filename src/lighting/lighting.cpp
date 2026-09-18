@@ -1,6 +1,4 @@
-#include <Arduino.h>
 #include "lighting.h"
-#include "config.h"
 
 #define NUM_LEDS    67
 #define BRIGHTNESS  30
@@ -9,11 +7,7 @@ CRGB leds[NUM_LEDS];
 
 bool lightState = false;
 
-
-// =========================
-// Initialisation
-// =========================
-
+//Initialisation with FastLED lib
 void lighting_init()
 {
     FastLED.addLeds<WS2812B, LIGHT_PIN, GRB>(leds, NUM_LEDS);
@@ -23,11 +17,6 @@ void lighting_init()
     lighting_off();
 }
 
-
-// =========================
-// Lumière
-// =========================
-
 void lighting_on(CRGB color)
 {
     fill_solid(leds, NUM_LEDS, color);
@@ -35,7 +24,6 @@ void lighting_on(CRGB color)
 
     lightState = true;
 }
-
 
 void lighting_off()
 {
@@ -45,27 +33,16 @@ void lighting_off()
     lightState = false;
 }
 
-
 bool lighting_is_on()
 {
     return lightState;
 }
-
-
-// =========================
-// Couleur
-// =========================
 
 void change_color(CRGB color)
 {
     fill_solid(leds, NUM_LEDS, color);
     FastLED.show();
 }
-
-
-// =========================
-// Luminosité
-// =========================
 
 void increase_brightness()
 {
@@ -82,7 +59,6 @@ void increase_brightness()
     FastLED.show();
 }
 
-
 void decrease_brightness()
 {
     int currentBrightness = FastLED.getBrightness();
@@ -97,7 +73,6 @@ void decrease_brightness()
     FastLED.setBrightness(currentBrightness);
     FastLED.show();
 }
-
 
 int brightness()
 {

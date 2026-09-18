@@ -17,6 +17,7 @@ void buttons_init();
 void buttons_update();
 bool button_pressed(Button button);
 bool button_just_pressed(Button button);
+void button_clear_press(Button button);
 bool button_is_held(Button button);
 bool switch_light_state();
 
