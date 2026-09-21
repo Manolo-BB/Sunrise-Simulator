@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include "config.h"
-#include "lighting/lighting.h"
+#include "hardware/lighting.h"
 #include "hardware/button.h"
 #include "modes/light_mode.h"
 #include "hardware/screen.h"
 #include "hardware/rtc.h"
 #include "modes/menu_mode.h"
-#include "clock/clock.h"
+#include "modes/clock.h"
 
 static int lastDisplayedHour = -1;
 static int lastDisplayedMinute = -1;

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "hardware/button.h"
 #include "hardware/screen.h"
-#include "clock/clock.h"
+#include "modes/clock.h"
 
 enum MenuState
 {

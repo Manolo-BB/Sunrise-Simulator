@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "config.h"
-#include "../lighting/lighting.h"
+#include "../hardware/lighting.h"
 #include "../hardware/button.h"
 
 #define VALIDATION_TIME 1000
