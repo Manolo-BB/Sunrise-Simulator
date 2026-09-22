@@ -1,15 +1,18 @@
 #include "rtc.h"
 
+//Rename the RTC module as rtc
 RTC_DS3231 rtc;
 
-//Hour at first power on
+//Hour at first power on after that, RTC manage it
 uint8_t currentHour = 0;
 uint8_t currentMinute = 0;
 uint8_t currentSecond = 0;
 
+//Variables used to count update intervals
 static unsigned long lastSecondUpdate = 0;
 static unsigned long lastRtcSync = 0;
 
+//Every RTC_SYNC_INTERVAL we update the software hour with the real RTC
 static void rtc_sync_from_ds3231()
 {
     DateTime now = rtc.now();
@@ -20,21 +23,27 @@ static void rtc_sync_from_ds3231()
     lastSecondUpdate = millis();
     lastRtcSync = millis();
 
+    //Debugging print
     Serial.print("Synchronisation RTC : ");
 
     //Add 0 when the hour or minute is less than 10 to allow 09:06
     if (currentHour < 10)
-        Serial.print("0");
-
+    {
+        Serial.print("0");  
+    }
+        
     Serial.print(currentHour);
     Serial.print(":");
 
     if (currentMinute < 10)
-        Serial.print("0");
+    {
+        Serial.print("0");  
+    }
 
     Serial.println(currentMinute);
 }
 
+//Initialisation of the RTC module
 void rtc_init()
 {
     //Begin I2C communication
@@ -46,9 +55,8 @@ void rtc_init()
     }
 
     Serial.println("DS3231 detecte.");
-
-    //Fake init for power on
-    rtc.adjust(DateTime( 2026, 1, 1, currentHour, currentMinute, currentSecond));
+    
+    //Carry out an synchronisation if the circuit has been disconnected
     rtc_sync_from_ds3231();
 }
 
@@ -86,17 +94,12 @@ void rtc_update()
 
 void rtc_set_time(uint8_t hour, uint8_t minute)
 {
-    if (hour > 23)
-        hour = 0;
-
-    if (minute > 59)
-        minute = 0;
-
     DateTime now = rtc.now();
 
-    // Update with DS3231
+    // Update only hour and minutes
     rtc.adjust( DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
 
+    // Synch variables
     currentHour = hour;
     currentMinute = minute;
     currentSecond = 0;
@@ -104,6 +107,7 @@ void rtc_set_time(uint8_t hour, uint8_t minute)
     lastSecondUpdate = millis();
     lastRtcSync = millis();
 
+    //Debugging print
     Serial.print("new hour : ");
 
     if (currentHour < 10)
@@ -118,7 +122,24 @@ void rtc_set_time(uint8_t hour, uint8_t minute)
     Serial.println(currentMinute);
 }
 
+void rtc_set_date(uint8_t day, uint8_t month, uint16_t year)
+{
+    //We retrieve the variables
+    DateTime now = rtc.now();
 
+    //We only update the date variables, the others remain unchanged.
+    rtc.adjust(DateTime(year, month, day, rtc_get_hour(), rtc_get_minute(), currentSecond));
+
+    // Debugging print
+    Serial.print("Nouvelle date : ");
+    Serial.print(day);
+    Serial.print("/");
+    Serial.print(month);
+    Serial.print("/");
+    Serial.println(year);
+}
+
+//Getters to get variables
 uint8_t rtc_get_hour()
 {
     return currentHour;
@@ -127,4 +148,22 @@ uint8_t rtc_get_hour()
 uint8_t rtc_get_minute()
 {
     return currentMinute;
+}
+
+uint8_t rtc_get_day()
+{
+    DateTime now = rtc.now();
+    return now.day();
+}
+
+uint8_t rtc_get_month()
+{
+    DateTime now = rtc.now();
+    return now.month();
+}
+
+uint16_t rtc_get_year()
+{
+    DateTime now = rtc.now();
+    return now.year();
 }

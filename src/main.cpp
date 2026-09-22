@@ -97,6 +97,6 @@ void loop()
         lastDisplayedDay = day;
         lastDisplayedMonth = month;
         lastDisplayedYear = year;
-}
+    }
     wasMenuActive=menu_is_active();
 }
