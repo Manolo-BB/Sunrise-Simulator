@@ -1,10 +1,6 @@
 #include "lighting.h"
 
-#define NUM_LEDS    67
-#define BRIGHTNESS  30
-
 CRGB leds[NUM_LEDS];
-
 bool lightState = false;
 
 //Initialisation with FastLED lib
@@ -33,15 +29,15 @@ void lighting_off()
     lightState = false;
 }
 
-bool lighting_is_on()
-{
-    return lightState;
-}
-
 void change_color(CRGB color)
 {
     fill_solid(leds, NUM_LEDS, color);
     FastLED.show();
+}
+
+bool lighting_is_on()
+{
+    return lightState;
 }
 
 void increase_brightness()
@@ -74,6 +70,7 @@ void decrease_brightness()
     FastLED.show();
 }
 
+//Return the actual brightness
 int brightness()
 {
     return FastLED.getBrightness();
