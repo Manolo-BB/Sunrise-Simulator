@@ -4096,28 +4096,6 @@
 			)
 		)
 	)
-	(global_label "SD_MOSI"
-		(shape input)
-		(at 233.68 85.09 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "1990f6e2-dac9-481b-a3d9-6ed5696d0b52")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 244.7085 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "DIN"
 		(shape input)
 		(at 222.25 134.62 180)
@@ -4228,9 +4206,9 @@
 			)
 		)
 	)
-	(global_label "SD_CLK"
+	(global_label "RTC_SDA"
 		(shape input)
-		(at 233.68 82.55 0)
+		(at 184.15 78.74 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4238,9 +4216,9 @@
 			)
 			(justify left)
 		)
-		(uuid "41867a81-f1ae-4178-bdb2-173b6b30d8a9")
+		(uuid "3f2791fb-7e3f-4925-8ad1-0467e8f059bb")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 243.6804 82.55 0)
+			(at 195.1785 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4296,7 +4274,7 @@
 	)
 	(global_label "LRCLK"
 		(shape input)
-		(at 233.68 77.47 0)
+		(at 184.15 81.28 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4306,7 +4284,7 @@
 		)
 		(uuid "44c51996-adea-49cb-a420-e6b9231ae34d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 242.5314 77.47 0)
+			(at 193.0014 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4318,22 +4296,22 @@
 	)
 	(global_label "SD_CS"
 		(shape input)
-		(at 233.68 87.63 0)
+		(at 148.59 73.66 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "5733564f-fd3a-4c83-952a-74bac83d4ef9")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 242.5918 87.63 0)
+			(at 139.6782 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 				(hide yes)
 			)
 		)
@@ -4580,28 +4558,6 @@
 			)
 		)
 	)
-	(global_label "BUTTON_PARAM_PIN"
-		(shape input)
-		(at 184.15 91.44 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "7bae1ddc-43cf-4336-a78e-309dd2b00a45")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 205.641 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "DISPLAY_DC"
 		(shape input)
 		(at 120.65 134.62 180)
@@ -4714,7 +4670,7 @@
 	)
 	(global_label "BCLK"
 		(shape input)
-		(at 233.68 74.93 0)
+		(at 184.15 93.98 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4724,7 +4680,7 @@
 		)
 		(uuid "962ab2b2-290a-4a99-b288-ce8be3f921de")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 241.5033 74.93 0)
+			(at 191.9733 93.98 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4976,28 +4932,6 @@
 			)
 		)
 	)
-	(global_label "RTC_SDA"
-		(shape input)
-		(at 184.15 73.66 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "cb14af9e-271e-4add-9a76-026de187e934")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 195.1785 73.66 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "SCL"
 		(shape input)
 		(at 120.65 139.7 180)
@@ -5066,7 +5000,7 @@
 	)
 	(global_label "AMP_EN"
 		(shape input)
-		(at 233.68 69.85 0)
+		(at 184.15 83.82 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5076,7 +5010,7 @@
 		)
 		(uuid "d5affc0b-15bc-4d44-bd18-b067e3df244f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 243.9223 69.85 0)
+			(at 194.3923 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5174,6 +5108,28 @@
 			)
 		)
 	)
+	(global_label "BUTTON_PARAM_PIN"
+		(shape input)
+		(at 184.15 86.36 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "e83d2743-7027-43dc-9b8f-27b1867457d0")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 205.641 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "RTC_SCL"
 		(shape input)
 		(at 41.91 151.13 180)
@@ -5220,7 +5176,7 @@
 	)
 	(global_label "SD_MISO"
 		(shape input)
-		(at 233.68 80.01 0)
+		(at 184.15 91.44 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5230,7 +5186,7 @@
 		)
 		(uuid "f6aa6483-ea44-439d-a668-f31bcf27d326")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 244.7085 80.01 0)
+			(at 195.1785 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5242,7 +5198,7 @@
 	)
 	(global_label "DIN"
 		(shape input)
-		(at 233.68 72.39 0)
+		(at 184.15 73.66 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5252,7 +5208,7 @@
 		)
 		(uuid "f7393c27-6db1-42f9-be84-6b1ff1482cbf")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 239.8705 72.39 0)
+			(at 190.3405 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
