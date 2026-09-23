@@ -616,6 +616,158 @@ void screen_show_alarm_setting_page(uint8_t selectedAlarm)
         }
 
     } while (display.nextPage());
+    display.hibernate();
+}
+
+void screen_show_alarm_time_setting_page(uint8_t hour, uint8_t minute)
+{
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(85, 30);
+        display.print("ALARME - HEURE");
+
+        display.setFont(&FreeMonoBold24pt7b);
+
+        display.setCursor(SETTING_HOUR_X, SETTING_HOUR_Y);
+
+        if (hour < 10)
+            display.print("0");
+
+        display.print(hour);
+        display.setCursor(SETTING_SEPARATOR_X, SETTING_SEPARATOR_Y);
+        display.print(":");
+        display.setCursor(SETTING_MINUTE_X, SETTING_MINUTE_Y);
+
+        if (minute < 10)
+            display.print("0");
+
+        display.print(minute);
+
+    }
+    while (display.nextPage());
 
     display.hibernate();
+}
+
+void screen_update_alarm_setting_hour(uint8_t hour, bool show)
+{
+    display.setPartialWindow(SETTING_HOUR_X, SETTING_HOUR_Y - SETTING_HOUR_H, SETTING_HOUR_W, SETTING_HOUR_H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        if (show)
+        {
+            display.setFont(&FreeMonoBold24pt7b);
+            display.setTextColor(GxEPD_BLACK);
+            display.setCursor(SETTING_HOUR_X,SETTING_HOUR_Y );
+
+            if (hour < 10)
+                display.print("0");
+
+            display.print(hour);
+        }
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+void screen_update_alarm_setting_minute(uint8_t minute, bool show)
+{
+    display.setPartialWindow(SETTING_MINUTE_X,SETTING_MINUTE_Y - SETTING_MINUTE_H,SETTING_MINUTE_W,SETTING_MINUTE_H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        if (show)
+        {
+            display.setFont(&FreeMonoBold24pt7b);
+            display.setTextColor(GxEPD_BLACK);
+            display.setCursor( SETTING_MINUTE_X, SETTING_MINUTE_Y);
+
+            if (minute < 10)
+                display.print("0");
+
+            display.print(minute);
+        }
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+void screen_show_rising_time_setting_page(uint8_t risingTime)
+{
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(95, 30);
+        display.print("RISING TIME");
+
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setCursor(90, 95);
+
+        if (risingTime < 10)
+            display.print("0");
+
+        display.print(risingTime);
+        display.print(" min");
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+void screen_update_rising_time_setting(uint8_t risingTime)
+{
+    const int16_t X = 70;
+    const int16_t Y = 55;
+    const uint16_t W = 190;
+    const uint16_t H = 50;
+
+    display.setPartialWindow(X, Y, W, H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setTextColor(GxEPD_BLACK); 
+        display.setCursor(90, 95);
+           
+        if (risingTime < 10)
+            display.print("0");
+                 
+        display.print(risingTime);
+        display.print(" min"); 
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+void screen_reset_alarm_page()
+{
+    alarmPageDisplayed = false;
 }

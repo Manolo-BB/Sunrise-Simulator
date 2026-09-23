@@ -115,9 +115,33 @@ void menu_update()
 
         if (alarm_selection_finished())
         {
-            // The selected alarm will be configured here later
+            menuState = ALARM_TIME_SETTING_PAGE;
+            alarm_start_alarm_setting();
             return;
         }
+        return;
+    }
+
+    if (menuState == ALARM_TIME_SETTING_PAGE)
+    {
+        if (button_just_pressed(BUTTON_PARAM))
+        {
+            menuState = ALARM_SETTING_PAGE;
+            screen_reset_alarm_page();
+            alarm_start_setting();
+            return;
+        }
+
+        alarm_setting_update();
+
+        if (alarm_setting_finished())
+        {
+            menuState = ALARM_SETTING_PAGE;
+            screen_reset_alarm_page();
+            alarm_start_setting();
+            return;
+        }
+
         return;
     }
 }

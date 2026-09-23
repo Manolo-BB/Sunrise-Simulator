@@ -23,5 +23,11 @@ void screen_update_setting_date(uint8_t day, uint8_t month, uint16_t year, uint8
 
 // Alarm setting screen
 void screen_show_alarm_setting_page(uint8_t selectedAlarm);
+void screen_show_alarm_time_setting_page(uint8_t hour,uint8_t minute);
+void screen_update_alarm_setting_hour( uint8_t hour,bool show);
+void screen_update_alarm_setting_minute( uint8_t minute,bool show);
+void screen_show_rising_time_setting_page(uint8_t risingTime);
+void screen_update_rising_time_setting( uint8_t risingTime);
+void screen_reset_alarm_page();
 
 #endif

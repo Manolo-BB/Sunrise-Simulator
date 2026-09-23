@@ -6,7 +6,8 @@ enum MenuState
     MENU_INACTIVE,
     PARAM_PAGE,
     TIME_SETTING_PAGE,
-    ALARM_SETTING_PAGE
+    ALARM_SETTING_PAGE,
+    ALARM_TIME_SETTING_PAGE
 };
 
 enum ParamOption
