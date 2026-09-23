@@ -22,6 +22,6 @@ void screen_show_date_setting_page();
 void screen_update_setting_date(uint8_t day, uint8_t month, uint16_t year, uint8_t field, bool show);
 
 // Alarm setting screen
-void screen_show_alarm_setting_page();
+void screen_show_alarm_setting_page(uint8_t selectedAlarm);
 
 #endif

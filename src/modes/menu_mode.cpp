@@ -1,9 +1,12 @@
 
 #include <Arduino.h>
+
 #include "menu_mode.h"
+#include "modes/clock.h"
+#include "modes/alarm.h"
+
 #include "hardware/button.h"
 #include "hardware/screen.h"
-#include "modes/clock.h"
 
 //This mode aim to know the state of the display in menu
 
@@ -57,10 +60,11 @@ void menu_update()
                 screen_show_time_setting_page();
                 return;
             }
-            else
+            else if(selectedOption == PARAM_ALARM)
             {
                 menuState = ALARM_SETTING_PAGE;
-                screen_show_alarm_setting_page();
+                alarm_start_setting();
+                return;
             }
         }
 
@@ -100,9 +104,19 @@ void menu_update()
         if (button_just_pressed(BUTTON_PARAM))
         {
             menuState = PARAM_PAGE;
-            selectedOption = PARAM_TIME;
+            selectedOption = PARAM_ALARM;
 
             screen_show_param_page(selectedOption);
+            return;
+        }
+        
+
+        alarm_update();
+
+        if (alarm_selection_finished())
+        {
+            // The selected alarm will be configured here later
+            return;
         }
         return;
     }

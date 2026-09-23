@@ -32,7 +32,7 @@ void IRAM_ATTR plus_interrupt()
 {
     unsigned long now = micros(); //Interrupts functions works in microseconds
 
-    if (now - lastPlusInterrupt >= DEBOUNCE_TIME * 10000UL)
+    if (now - lastPlusInterrupt >= DEBOUNCE_TIME * 1000UL)
     {
         if (plusPressCount < 255)
             plusPressCount++;
@@ -45,7 +45,7 @@ void IRAM_ATTR minus_interrupt()
 {
     unsigned long now = micros();
 
-    if (now - lastMinusInterrupt >= DEBOUNCE_TIME * 10000UL)
+    if (now - lastMinusInterrupt >= DEBOUNCE_TIME * 1000UL)
     {
         if (minusPressCount < 255)
             minusPressCount++;

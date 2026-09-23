@@ -12,6 +12,7 @@
 #include "modes/light_mode.h"
 #include "modes/menu_mode.h"
 #include "modes/clock.h"
+#include "modes/alarm.h"
 
 //Variables
 static int lastDisplayedHour = -1;
@@ -36,6 +37,7 @@ void setup()
     //Modes initialisation
     light_mode_init();
     menu_init();
+    alarm_init();
 
     //Initial display
     screen_show_home_complete(rtc_get_hour(), rtc_get_minute(), false, false, true, false, false);

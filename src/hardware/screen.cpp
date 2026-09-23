@@ -54,6 +54,8 @@ static const int16_t SETTING_DATE_Y = 95;
 static const uint16_t SETTING_DATE_W = 230;
 static const uint16_t SETTING_DATE_H = 40;
 
+// Stat of alarm screen
+static bool alarmPageDisplayed = false;
 
 // ========================================
 // Internal drawing functions
@@ -255,7 +257,7 @@ void screen_init()
 {
     display.init(115200, true, 50, false);
     display.setRotation(3);
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
 
     // Draws the display page by page to update the entire screen
     display.firstPage();
@@ -270,7 +272,7 @@ void screen_init()
 
 void screen_show_home_complete( uint8_t hour, uint8_t minute, bool alarm1, bool alarm2, bool alarm3, bool alarm4, bool alarm5)
 {
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
     display.firstPage();
     do
     {
@@ -328,7 +330,7 @@ void screen_update_home_date()
 // Parameter screen
 void screen_show_param_page(uint8_t selectedOption)
 {
-    display.setFullWindow();
+    display.setPartialWindow( 0,0 , display.width(), display.height());
     display.firstPage();
 
     do
@@ -395,7 +397,7 @@ void screen_show_time_setting_page()
     uint8_t hour = rtc_get_hour();
     uint8_t minute = rtc_get_minute();
 
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
     display.firstPage();
 
     do
@@ -495,7 +497,7 @@ void screen_show_date_setting_page()
     uint8_t month = rtc_get_month();
     uint16_t year = rtc_get_year();
 
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());;
     display.firstPage();
 
     do
@@ -543,26 +545,77 @@ void screen_update_setting_date(uint8_t day, uint8_t month, uint16_t year, uint8
 }
 
 // Alarm setting screen
-void screen_show_alarm_setting_page()
+void screen_show_alarm_setting_page(uint8_t selectedAlarm)
 {
-    display.setRotation(3);
-    display.setFullWindow();
+    const int16_t ALARM_WINDOW_X = 65;
+    const int16_t ALARM_WINDOW_Y = 35;
+    const uint16_t ALARM_WINDOW_W = 160;
+    const uint16_t ALARM_WINDOW_H = 80;
+
+    if (!alarmPageDisplayed)
+    {
+        display.setPartialWindow(  0, 0, display.width(), display.height());;
+        display.firstPage();
+
+        do
+        {
+            display.fillScreen(GxEPD_WHITE);
+            display.setTextColor(GxEPD_BLACK);
+            // Title
+            display.setFont(&FreeMonoBold12pt7b);
+            display.setCursor(60, 20);
+            display.print("REGLAGE ALARME");
+
+            // Alarm list
+            display.setFont(&FreeMonoBold9pt7b);
+
+            for (uint8_t i = 0; i < 5; i++)
+            {
+                uint16_t y = 40 + i * 15;
+                display.setCursor(75, y);
+                if (i == selectedAlarm)
+                    display.print("> ");
+                else
+                    display.print("  ");
+
+                display.print("Alarme ");
+                display.print(i + 1);
+            }
+
+        } while (display.nextPage());
+
+        alarmPageDisplayed = true;
+        display.hibernate();
+
+        return;
+    }
+
+    // Only update the alarm selection
+    display.setPartialWindow( ALARM_WINDOW_X, ALARM_WINDOW_Y, ALARM_WINDOW_W, ALARM_WINDOW_H);
+
     display.firstPage();
 
     do
     {
         display.fillScreen(GxEPD_WHITE);
-
+        display.setFont(&FreeMonoBold9pt7b);
         display.setTextColor(GxEPD_BLACK);
-        display.setFont(&FreeMonoBold24pt7b);
 
-        display.setCursor(20, 40);
-        display.print("REGLAGE");
+        for (uint8_t i = 0; i < 5; i++)
+        {
+            uint16_t y = 40 + i * 15;
+            display.setCursor(75, y);
 
-        display.setCursor(20, 75);
-        display.print("ALARME");
-    }
-    while (display.nextPage());
+            if (i == selectedAlarm)
+                display.print("> ");
+            else
+                display.print("  ");
+
+            display.print("Alarme ");
+            display.print(i + 1);
+        }
+
+    } while (display.nextPage());
 
     display.hibernate();
 }
