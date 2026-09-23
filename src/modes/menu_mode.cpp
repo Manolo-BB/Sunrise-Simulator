@@ -96,6 +96,7 @@ void menu_update()
             screen_show_param_page(selectedOption);
             return;
         }
+        return;
     }
     
     //Alarm setting page
@@ -110,7 +111,6 @@ void menu_update()
             return;
         }
         
-
         alarm_update();
 
         if (alarm_selection_finished())
@@ -141,7 +141,6 @@ void menu_update()
             alarm_start_setting();
             return;
         }
-
         return;
     }
 }

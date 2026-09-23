@@ -4,25 +4,29 @@
 #include "../hardware/button.h"
 #include "../hardware/screen.h"
 
-// Alarm configuration
-static const uint8_t NUMBER_OF_ALARMS = 5;
-// Maximum rising time in minutes
-static const uint8_t MAX_RISING_TIME = 45;
-
 struct Alarm
 {
     uint8_t hour;
     uint8_t minute;
     uint8_t risingTime;
+    uint8_t sound;
+    bool monday;
+    bool tuesday;
+    bool wednesday;
+    bool thursday;
+    bool friday;
+    bool saturday;
+    bool sunday;
+    bool enabled;
 };
 
 static Alarm alarms[NUMBER_OF_ALARMS] =
 {
-    {7, 0, 30},
-    {8, 0, 30},
-    {9, 0, 30},
-    {10, 0, 30},
-    {11, 0, 30}
+    {7,  0, 30, 1, true, true,  true,  true,  true,  false, false, false},
+    {7,  0, 30, 2, true, true,  true,  true,  true,  false, false, false},
+    {7,  0, 30, 3, true, true,  true,  true,  true,  false, false, false},
+    {7,  0, 30, 4, true, true,  true,  true,  true,  false, false, false},
+    {7,  0, 30, 5, true, true,  true,  true,  true,  false, false, false},
 };
 
 // Alarm selection state
@@ -36,12 +40,343 @@ static bool settingFinished = false;
 static uint8_t settingHour = 0;
 static uint8_t settingMinute = 0;
 static uint8_t settingRisingTime = 0;
+static uint8_t settingSound = 1;
+static bool settingMonday = false;
+static bool settingTuesday = false;
+static bool settingWednesday = false;
+static bool settingThursday = false;
+static bool settingFriday = false;
+static bool settingSaturday = false;
+static bool settingSunday = false;
+static bool settingEnabled = false;
 
 // Blink management
 static unsigned long lastBlinkTime = 0;
 static bool blinkOn = true;
 
 #define BLINK_INTERVAL 500
+
+static void alarm_start_hour_setting();
+static void alarm_update_hour_setting();
+
+static void alarm_start_minute_setting();
+static void alarm_update_minute_setting();
+
+static void alarm_start_rising_time_setting();
+static void alarm_update_rising_time_setting();
+
+static void alarm_start_sound_setting();
+static void alarm_update_sound_setting();
+
+static void alarm_start_days_setting();
+static void alarm_update_days_setting();
+
+static void alarm_start_enabled_setting();
+static void alarm_update_enabled_setting();
+
+static void alarm_save_settings();
+
+static void alarm_start_hour_setting()
+{
+    blinkOn = true;
+    lastBlinkTime = millis();
+
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+
+    screen_show_alarm_time_setting_page( settingHour,settingMinute );
+}
+
+static void alarm_update_hour_setting()
+{
+    uint8_t plusCount = button_get_plus_count();
+    uint8_t minusCount = button_get_minus_count();
+    uint8_t validateCount = button_get_validate_count();
+
+    bool valueChanged = (plusCount > 0 || minusCount > 0);
+
+    // Blink hour
+    unsigned long now = millis();
+
+    if (now - lastBlinkTime >= BLINK_INTERVAL)
+    {
+        lastBlinkTime = now;
+        blinkOn = !blinkOn;
+
+        screen_update_alarm_setting_hour( settingHour, blinkOn);
+    }
+
+    // Increase hour
+    while (plusCount--)
+    {
+        if (settingHour >= 23)
+            settingHour = 0;
+        else
+            settingHour++;
+    }
+
+    // Decrease hour
+    while (minusCount--)
+    {
+        if (settingHour == 0)
+            settingHour = 23;
+        else
+            settingHour--;
+    }
+
+    if (valueChanged)
+    {
+        screen_update_alarm_setting_hour(settingHour, true);
+    }
+
+    // Validate hour
+    if (validateCount > 0)
+    {
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        settingStep = ALARM_SET_MINUTE;
+
+        screen_update_alarm_setting_hour(settingHour,true);
+
+        alarm_start_minute_setting();
+    }
+}
+
+// Minutes settings
+static void alarm_start_minute_setting()
+{
+    blinkOn = true;
+    lastBlinkTime = millis();
+
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+
+    screen_show_alarm_time_setting_page(settingHour, settingMinute);
+}
+
+static void alarm_update_minute_setting()
+{
+    uint8_t plusCount = button_get_plus_count();
+    uint8_t minusCount = button_get_minus_count();
+    uint8_t validateCount = button_get_validate_count();
+
+    bool valueChanged = (plusCount > 0 || minusCount > 0);
+
+    // Blink minute
+    unsigned long now = millis();
+
+    if (now - lastBlinkTime >= BLINK_INTERVAL)
+    {
+        lastBlinkTime = now;
+        blinkOn = !blinkOn;
+
+        screen_update_alarm_setting_minute( settingMinute, blinkOn);
+    }
+
+    // Increase minute
+    while (plusCount--)
+    {
+        if (settingMinute >= 59)
+            settingMinute = 0;
+        else
+            settingMinute++;
+    }
+
+    // Decrease minute
+    while (minusCount--)
+    {
+        if (settingMinute == 0)
+            settingMinute = 59;
+        else
+            settingMinute--;
+    }
+
+    if (valueChanged)
+    {
+        screen_update_alarm_setting_minute(settingMinute,true);
+    }
+
+    // Validate minute
+    if (validateCount > 0)
+    {
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        settingStep = ALARM_SET_RISING_TIME;
+
+        screen_update_alarm_setting_minute(settingMinute, true);
+
+        alarm_start_rising_time_setting();
+    }
+}
+
+//Rising time settings
+static void alarm_start_rising_time_setting()
+{
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+
+    screen_show_rising_time_setting_page( settingRisingTime);
+}
+
+
+static void alarm_update_rising_time_setting()
+{
+    uint8_t plusCount = button_get_plus_count();
+    uint8_t minusCount = button_get_minus_count();
+    uint8_t validateCount = button_get_validate_count();
+
+    bool valueChanged = (plusCount > 0 || minusCount > 0);
+
+    // Increase rising time
+    while (plusCount--)
+    {
+        if (settingRisingTime < MAX_RISING_TIME)
+            settingRisingTime++;
+    }
+
+    // Decrease rising time
+    while (minusCount--)
+    {
+        if (settingRisingTime > 0)
+            settingRisingTime--;
+    }
+
+    if (valueChanged)
+    {
+        screen_update_rising_time_setting( settingRisingTime);
+    }
+
+    // Validate rising time
+    if (validateCount > 0)
+    {
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        screen_update_rising_time_setting( settingRisingTime);
+
+        settingStep = ALARM_SET_SOUND;
+
+        alarm_start_sound_setting();
+    }
+}
+
+//Sound settings
+static void alarm_start_sound_setting()
+{
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+
+    screen_show_sound_setting_page( settingSound);
+}
+
+static void alarm_update_sound_setting()
+{
+    if (button_just_pressed(BUTTON_MINUS))
+    {
+        if (settingSound >= 5)
+            settingSound = 1;
+        else
+            settingSound++;
+
+        screen_update_sound_setting(settingSound);
+    }
+
+    if (button_just_pressed(BUTTON_PLUS))
+    {
+        if (settingSound <= 1)
+            settingSound = 5;
+        else
+            settingSound--;
+
+        screen_update_sound_setting(settingSound);
+    }
+
+    if (button_just_pressed(BUTTON_VALIDATE))
+    {
+        settingStep = ALARM_SET_DAYS;
+
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        alarm_start_days_setting();
+    }
+}
+
+//Days settings
+static void alarm_start_days_setting()
+{
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+    screen_show_days_setting_page( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday);
+}
+
+
+static void alarm_update_days_setting()
+{
+    // PLUS/MINUS work here to select
+
+    if (button_just_pressed(BUTTON_VALIDATE))
+    {
+        settingStep = ALARM_SET_ENABLED;
+
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        alarm_start_enabled_setting();
+    }
+}
+
+// Enabled settings
+static void alarm_start_enabled_setting()
+{
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+
+    screen_show_enabled_setting_page( settingEnabled);
+}
+
+
+static void alarm_update_enabled_setting()
+{
+    if (button_just_pressed(BUTTON_PLUS) ||
+        button_just_pressed(BUTTON_MINUS))
+    {
+        settingEnabled = !settingEnabled;
+
+        screen_update_enabled_setting( settingEnabled);
+    }
+
+    if (button_just_pressed(BUTTON_VALIDATE))
+    {
+        button_clear_plus_minus_count();
+        button_clear_validate_count();
+
+        alarm_save_settings();
+
+        settingFinished = true;
+    }
+}
+
+// Save alarm settings
+static void alarm_save_settings()
+{
+    Alarm &alarm = alarms[selectedAlarm];
+
+    alarm.hour = settingHour;
+    alarm.minute = settingMinute;
+    alarm.risingTime = settingRisingTime;
+    alarm.sound = settingSound;
+    alarm.monday = settingMonday;
+    alarm.tuesday = settingTuesday;
+    alarm.wednesday = settingWednesday;
+    alarm.thursday = settingThursday;
+    alarm.friday = settingFriday;
+    alarm.saturday = settingSaturday;
+    alarm.sunday = settingSunday;
+    alarm.enabled = settingEnabled;
+}
 
 // Initialization
 void alarm_init()
@@ -119,170 +454,57 @@ void alarm_start_alarm_setting()
 {
     Alarm &alarm = alarms[selectedAlarm];
 
+    //Copy current values into temporary settings
     settingHour = alarm.hour;
     settingMinute = alarm.minute;
     settingRisingTime = alarm.risingTime;
-
+    settingSound = alarm.sound;
+    settingMonday = alarm.monday;
+    settingTuesday = alarm.tuesday;
+    settingWednesday = alarm.wednesday;
+    settingThursday = alarm.thursday;
+    settingFriday = alarm.friday;
+    settingSaturday = alarm.saturday;
+    settingSunday = alarm.sunday;
+    settingEnabled = alarm.enabled;
+    
     settingStep = ALARM_SET_HOUR;
     settingFinished = false;
-
-    blinkOn = true;
-    lastBlinkTime = millis();
 
     button_clear_plus_minus_count();
     button_clear_validate_count();
 
-    screen_show_alarm_time_setting_page( settingHour, settingMinute);
+    alarm_start_hour_setting();
 }
 
 // Alarm setting
 void alarm_setting_update()
 {
-    uint8_t plusCount = button_get_plus_count();
-    uint8_t minusCount = button_get_minus_count();
-    uint8_t validateCount = button_get_validate_count();
-
-    bool valueChanged = (plusCount > 0 || minusCount > 0);
-
-    // Blink the field currently being edited
-    unsigned long now = millis();
-
-    if (now - lastBlinkTime >= BLINK_INTERVAL)
+    switch (settingStep)
     {
-        lastBlinkTime = now;
-        blinkOn = !blinkOn;
+        case ALARM_SET_HOUR:
+            alarm_update_hour_setting();
+            break;
 
-        // Hour
-        if (settingStep == ALARM_SET_HOUR)
-        {
-            screen_update_alarm_setting_hour(settingHour, blinkOn);
-        }
+        case ALARM_SET_MINUTE:
+            alarm_update_minute_setting();
+            break;
 
-        // Minute
-        else if (settingStep == ALARM_SET_MINUTE)
-        {
-            screen_update_alarm_setting_minute(settingMinute, blinkOn);
-        }
-    }
+        case ALARM_SET_RISING_TIME:
+            alarm_update_rising_time_setting();
+            break;
 
-    // Hour
-    if (settingStep == ALARM_SET_HOUR)
-    {
-        while (plusCount--)
-        {
-            if (settingHour >= 23)
-                settingHour = 0;
-            else
-                settingHour++;
-        }
+        case ALARM_SET_SOUND:
+            alarm_update_sound_setting();
+            break;
 
-        while (minusCount--)
-        {
-            if (settingHour == 0)
-                settingHour = 23;
-            else
-                settingHour--;
-        }
+        case ALARM_SET_DAYS:
+            alarm_update_days_setting();
+            break;
 
-        if (valueChanged)
-        {
-            screen_update_alarm_setting_hour(settingHour, true);
-        }
-
-        if (validateCount > 0)
-        {
-            // Clear button interrupts before changing screen
-            button_clear_plus_minus_count();
-            button_clear_validate_count();
-
-            settingStep = ALARM_SET_MINUTE;
-
-            blinkOn = true;
-            lastBlinkTime = millis();
-
-            screen_update_alarm_setting_hour(settingHour, true);
-            screen_update_alarm_setting_minute(settingMinute, true);
-        }
-
-        return;
-    }
-
-    // Minute
-    if (settingStep == ALARM_SET_MINUTE)
-    {
-        while (plusCount--)
-        {
-            if (settingMinute >= 59)
-                settingMinute = 0;
-            else
-                settingMinute++;
-        }
-
-        while (minusCount--)
-        {
-            if (settingMinute == 0)
-                settingMinute = 59;
-            else
-                settingMinute--;
-        }
-
-        if (valueChanged)
-        {
-            screen_update_alarm_setting_minute(settingMinute, true);
-        }
-
-        if (validateCount > 0)
-        {
-            // Clear button interrupts before changing screen
-            button_clear_plus_minus_count();
-            button_clear_validate_count();
-
-            screen_update_alarm_setting_minute(settingMinute, true);
-
-            settingStep = ALARM_SET_RISING_TIME;
-
-            blinkOn = true;
-            lastBlinkTime = millis();
-
-            screen_show_rising_time_setting_page(settingRisingTime);
-        }
-        return;
-    }
-
-    // Rising time
-    if (settingStep == ALARM_SET_RISING_TIME)
-    {
-        while (plusCount--)
-        {
-            if (settingRisingTime < MAX_RISING_TIME)
-                settingRisingTime++;
-        }
-
-        while (minusCount--)
-        {
-            if (settingRisingTime > 0)
-                settingRisingTime--;
-        }
-
-        if (valueChanged)
-        {
-            screen_update_rising_time_setting(settingRisingTime);
-        }
-
-        if (validateCount > 0)
-        {
-            screen_update_rising_time_setting(settingRisingTime);
-
-            alarms[selectedAlarm].hour = settingHour;
-            alarms[selectedAlarm].minute = settingMinute;
-            alarms[selectedAlarm].risingTime = settingRisingTime;
-
-            button_clear_plus_minus_count();
-            button_clear_validate_count();
-
-            settingFinished = true;
-        }
-        return;
+        case ALARM_SET_ENABLED:
+            alarm_update_enabled_setting();
+            break;
     }
 }
 
@@ -306,4 +528,17 @@ uint8_t alarm_get_setting_minute()
 uint8_t alarm_get_setting_rising_time()
 {
     return settingRisingTime;
+}
+
+uint8_t alarm_get_setting_sound()
+{
+    return settingSound;
+}
+
+bool alarm_is_enabled(uint8_t alarmIndex)
+{
+    if (alarmIndex >= NUMBER_OF_ALARMS)
+        return false;
+
+    return alarms[alarmIndex].enabled;
 }

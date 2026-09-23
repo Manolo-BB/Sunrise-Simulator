@@ -10,6 +10,7 @@
 #include "config.h"
 #include "screen.h"
 #include "rtc.h"
+#include "audio.h"
 
 #define ENABLE_GxEPD2_GFX 0
 
@@ -56,6 +57,7 @@ static const uint16_t SETTING_DATE_H = 40;
 
 // Stat of alarm screen
 static bool alarmPageDisplayed = false;
+static bool soundPageDisplayed = false;
 
 // ========================================
 // Internal drawing functions
@@ -767,7 +769,216 @@ void screen_update_rising_time_setting(uint8_t risingTime)
     display.hibernate();
 }
 
+// =========================================================
+// SOUND SETTING
+// =========================================================
+
+void screen_show_sound_setting_page(uint8_t sound)
+{
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold12pt7b);
+        display.setCursor(70, 35);
+        display.print("REGLAGE SON");
+
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setCursor(125, 100);
+
+        display.print(sound);
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+
+void screen_update_sound_setting(uint8_t sound)
+{
+    const int16_t X = 90;
+    const int16_t Y = 45;
+    const uint16_t W = 120;
+    const uint16_t H = 70;
+
+    display.setPartialWindow(X, Y, W, H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setCursor(125, 100);
+
+        display.print(sound);
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+
+// =========================================================
+// DAYS SETTING
+// =========================================================
+
+void screen_show_days_setting_page(
+    bool monday,
+    bool tuesday,
+    bool wednesday,
+    bool thursday,
+    bool friday,
+    bool saturday,
+    bool sunday
+)
+{
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold12pt7b);
+        display.setCursor(75, 30);
+        display.print("JOURS");
+
+        display.setFont(&FreeMonoBold9pt7b);
+
+        display.setCursor(70, 55);
+        display.print("LUN ");
+        display.print(monday ? "X" : "-");
+
+        display.setCursor(150, 55);
+        display.print("MAR ");
+        display.print(tuesday ? "X" : "-");
+
+        display.setCursor(70, 75);
+        display.print("MER ");
+        display.print(wednesday ? "X" : "-");
+
+        display.setCursor(150, 75);
+        display.print("JEU ");
+        display.print(thursday ? "X" : "-");
+
+        display.setCursor(70, 95);
+        display.print("VEN ");
+        display.print(friday ? "X" : "-");
+
+        display.setCursor(150, 95);
+        display.print("SAM ");
+        display.print(saturday ? "X" : "-");
+
+        display.setCursor(70, 115);
+        display.print("DIM ");
+        display.print(sunday ? "X" : "-");
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+
+void screen_update_days_setting(
+    bool monday,
+    bool tuesday,
+    bool wednesday,
+    bool thursday,
+    bool friday,
+    bool saturday,
+    bool sunday
+)
+{
+    screen_show_days_setting_page(
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+        sunday
+    );
+}
+
+
+// =========================================================
+// ENABLED SETTING
+// =========================================================
+
+void screen_show_enabled_setting_page(bool enabled)
+{
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold12pt7b);
+        display.setCursor(60, 35);
+        display.print("REVEIL");
+
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setCursor(85, 100);
+
+        if (enabled)
+            display.print("ON");
+        else
+            display.print("OFF");
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+
+void screen_update_enabled_setting(bool enabled)
+{
+    const int16_t X = 55;
+    const int16_t Y = 45;
+    const uint16_t W = 180;
+    const uint16_t H = 70;
+
+    display.setPartialWindow(X, Y, W, H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        display.setTextColor(GxEPD_BLACK);
+
+        display.setFont(&FreeMonoBold24pt7b);
+        display.setCursor(85, 100);
+
+        if (enabled)
+            display.print("ON");
+        else
+            display.print("OFF");
+
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
 void screen_reset_alarm_page()
 {
     alarmPageDisplayed = false;
+}
+
+void screen_reset_sound_page()
+{
+    soundPageDisplayed = false; 
 }

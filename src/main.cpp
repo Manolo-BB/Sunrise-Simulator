@@ -7,6 +7,8 @@
 #include "hardware/button.h"
 #include "hardware/screen.h"
 #include "hardware/rtc.h"
+#include "hardware/sd_card.h"
+#include "hardware/audio.h"
 
 //Modes functions
 #include "modes/light_mode.h"
@@ -27,12 +29,14 @@ static bool wasMenuActive = false;
 void setup()
 {
     //Begin serial communication for debugging
-    Serial.begin(115200);
+    //Serial.begin(115200);
 
     //Hardware initialisation
     rtc_init();
     buttons_init();
     screen_init();
+    sd_card_init();
+    audio_init();
 
     //Modes initialisation
     light_mode_init();
@@ -42,9 +46,9 @@ void setup()
     //Initial display
     screen_show_home_complete(rtc_get_hour(), rtc_get_minute(), false, false, true, false, false);
 
-    Serial.println("================================");
-    Serial.println("        Sunrise Simulator       ");
-    Serial.println("================================");
+    // Serial.println("================================");
+    // Serial.println("        Sunrise Simulator       ");
+    // Serial.println("================================");
 }
 
 //Main function that runs continuously
@@ -53,6 +57,7 @@ void loop()
     //Reading the actions on the buttons
     buttons_update();
     backlight_update();
+    audio_update();
     
     //We only adjust the colour and brightness of the light when the menu is not active (the ‘+’ and ‘-’ buttons are used for other functions within the menu)
     if (!menu_is_active())

@@ -34,7 +34,7 @@ SDA(MOSI)=23
 #define AMP_EN              25
 #define LRCLK               26
 #define BCLK                12  
-#define DIN                 34
+#define DIN                 1 // Do not use Serial in other functions when GPIO1 is used as I2S DIN
 
 //SD pins, SCK and MOSI are shared with the display
 #define SD_CS               2  
