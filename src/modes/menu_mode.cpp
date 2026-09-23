@@ -1,4 +1,11 @@
+
+#include <Arduino.h>
 #include "menu_mode.h"
+#include "hardware/button.h"
+#include "hardware/screen.h"
+#include "modes/clock.h"
+
+//This mode aim to know the state of the display in menu
 
 MenuState menuState = MENU_INACTIVE;
 ParamOption selectedOption = PARAM_TIME;
@@ -9,6 +16,7 @@ void menu_init()
     selectedOption = PARAM_TIME;
 }
 
+//Change the menuState based on user interactions
 void menu_update()
 {
     if (menuState == MENU_INACTIVE)
@@ -25,6 +33,7 @@ void menu_update()
 
     if (menuState == PARAM_PAGE)
     {
+        // PLUS
         if (button_just_pressed(BUTTON_PLUS))
         {
             selectedOption = PARAM_TIME;
@@ -46,7 +55,6 @@ void menu_update()
                 menuState = TIME_SETTING_PAGE;
                 clock_start_time_setting();
                 screen_show_time_setting_page();
-
                 return;
             }
             else
@@ -69,6 +77,13 @@ void menu_update()
     if (menuState == TIME_SETTING_PAGE)
     {
         clock_time_setting_update();
+
+        if (clock_time_setting_finished())
+        {
+            menuState = MENU_INACTIVE;
+            return;
+        }
+        
         if (button_just_pressed(BUTTON_PARAM))
         {
             menuState = PARAM_PAGE;

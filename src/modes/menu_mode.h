@@ -1,11 +1,6 @@
 #ifndef MENU_MODE_H
 #define MENU_MODE_H
 
-#include <Arduino.h>
-#include "hardware/button.h"
-#include "hardware/screen.h"
-#include "modes/clock.h"
-
 enum MenuState
 {
     MENU_INACTIVE,

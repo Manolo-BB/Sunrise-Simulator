@@ -1,5 +1,16 @@
+#include <Arduino.h>
+#include "config.h"
 #include "light_mode.h"
 
+#include "../hardware/lighting.h"
+#include "../hardware/button.h"
+#include "modes/menu_mode.h"
+
+//Configuration
+#define VALIDATION_TIME 1000
+#define NUMBER_OF_COLORS 7
+
+//Available colors
 CRGB colors[NUMBER_OF_COLORS] =
 {
     CRGB::Red,
@@ -22,22 +33,26 @@ const char* colorNames[NUMBER_OF_COLORS] =
     "White"    
 };
 
-bool settingMode = false; //false = color choice || true  = brightness adjustment 
-bool brightnessMode = false;
-int selectedColor = 0;
-
-unsigned long validatePressStart = 0;
-bool validateButtonWasPressed = false;
+// false = normal mode, true = color/brightness setting mode
+static bool settingMode = false; 
 
 
-void light_mode_init()
+// false = color selection, true = brightness adjustment
+static bool brightnessMode = false;
+
+static int selectedColor = 0;
+
+//Validation button state
+static unsigned long validatePressStart = 0;
+static bool validateButtonWasPressed = false;
+
+//=============================================
+// Static functions
+//=============================================
+
+// Synchronize the light output with the physical light switch state
+static void switch_management()
 {
-    lighting_init();
-    Serial.println("light mode initialised");
-}
-
-// Principal switch managment
-void switch_managment(){
     if (switch_light_state())
     {
         if (!lighting_is_on())
@@ -52,7 +67,9 @@ void switch_managment(){
         {
             lighting_off();
 
+            // Reset the setting mode when the light is switched off
             settingMode = false;
+            brightnessMode = false;
             validateButtonWasPressed = false;
 
             Serial.println("Lumiere OFF");
@@ -60,136 +77,137 @@ void switch_managment(){
     }
 }
 
-void setting_mode(){
-    if (lighting_is_on())
+static void change_color_selection(){
+    if (button_just_pressed(BUTTON_PLUS))
+        {
+            selectedColor++;
+
+            if (selectedColor >= NUMBER_OF_COLORS)
+                selectedColor = 0;
+
+            change_color(colors[selectedColor]);
+        }
+        else if (button_just_pressed(BUTTON_MINUS))
+        {
+            if (selectedColor == 0)
+                selectedColor = NUMBER_OF_COLORS - 1;
+            else
+                selectedColor--;
+
+            change_color(colors[selectedColor]);
+        }
+}
+
+//Handle color selection and brightness adjustement
+static void setting_mode_update()
+{
+    if (!lighting_is_on())
+        return;
+
+    // Enter setting mode
+    if (!settingMode)
     {
-        //First press on a button, enter setting mode
-        if (!settingMode)
+        settingMode = true; 
+        change_color_selection();
+    }
+
+    // Change color
+    else if (!brightnessMode)
+    {
+        change_color_selection();
+    }
+
+    // Change brightness
+    else
+    {
+        if (button_just_pressed(BUTTON_PLUS))
         {
-            if (button_just_pressed(BUTTON_PLUS))
-            {
-                settingMode = true;
-                brightnessMode = false;
-                selectedColor++;
-                if (selectedColor >= NUMBER_OF_COLORS)
-                {
-                    selectedColor = 0;
-                }
-                change_color(colors[selectedColor]);
-                // Serial.print("Choix couleur : ");
-                // Serial.println(colorNames[selectedColor]);
-            }
-            else if (button_just_pressed(BUTTON_MINUS))
-            {
-                settingMode = true;
-                brightnessMode = false;
-                selectedColor--;
-                if (selectedColor < 0)
-                {
-                    selectedColor = NUMBER_OF_COLORS - 1;
-                }
-                change_color(colors[selectedColor]);
-                // Serial.print("Choix couleur : ");
-                // Serial.println(colorNames[selectedColor]);
-            }
+            increase_brightness();
+
+            Serial.print("Brightness: ");
+            Serial.println(brightness());
         }
-        // Other presses, change color or brightness
-        else if (!brightnessMode)
+        else if (button_just_pressed(BUTTON_MINUS))
         {
-            if (button_just_pressed(BUTTON_PLUS))
-            {
-                selectedColor++;
-                if (selectedColor >= NUMBER_OF_COLORS)
-                {
-                    selectedColor = 0;
-                }
-                change_color(colors[selectedColor]);
-                // Serial.print("Couleur : ");
-                // Serial.println(colorNames[selectedColor]);
-            }
-            else if (button_just_pressed(BUTTON_MINUS))
-            {
-                selectedColor--;
-                if (selectedColor < 0)
-                {
-                    selectedColor = NUMBER_OF_COLORS - 1;
-                }
-                change_color(colors[selectedColor]);
-                // Serial.print("Couleur : ");
-                // Serial.println(colorNames[selectedColor]);
-            }
-        }
-        else
-        {
-            if (button_just_pressed(BUTTON_PLUS))
-            {
-                increase_brightness();
-                Serial.print("Luminosite : ");
-                Serial.println(brightness());
-            }
-            else if (button_just_pressed(BUTTON_MINUS))
-            {
-                decrease_brightness();
-                Serial.print("Luminosite : ");
-                Serial.println(brightness());
-            }
+            decrease_brightness();
+
+            Serial.print("Brightness: ");
+            Serial.println(brightness());
         }
     }
-    // Validation of the brightness setting
+  
+    // Long press on validation button
     if (settingMode)
     {
         bool validatePressed = button_pressed(BUTTON_VALIDATE);
-        // Start pressing the validation button
+
+        // Start measuring the validation button press
         if (validatePressed && !validateButtonWasPressed)
         {
             validatePressStart = millis();
             validateButtonWasPressed = true;
-            Serial.println("Validation en cours...");
+
+            Serial.println("Validation in progress...");
         }
 
-        // End of the press
+        // The validation button has been released
         else if (!validatePressed && validateButtonWasPressed)
         {
             unsigned long pressDuration = millis() - validatePressStart;
             validateButtonWasPressed = false;
+
             if (pressDuration >= VALIDATION_TIME)
             {
                 if (!brightnessMode)
                 {
-                    // Color validated, enter brightness adjustment mode
+                    // The color is validated and brightness adjustment starts
                     brightnessMode = true;
-                    Serial.print("Color validated : ");
+
+                    Serial.print("Color validated: ");
                     Serial.println(colorNames[selectedColor]);
                     Serial.println("Brightness adjustment mode");
                 }
                 else
                 {
-                    // Brightness validated
+                    // The brightness is validated and settings are complete
                     settingMode = false;
-                    Serial.println("SETTINGS COMPLETE !");
+
+                    Serial.println("Settings complete");
                 }
             }
             else
             {
-                Serial.println("Appui trop court");
+                Serial.println("Press too short");
             }
         }
     }
 }
 
+//=============================================
+// Global functions
+//=============================================
+
+//Initialisation
+void light_mode_init()
+{
+    lighting_init();
+    Serial.println("light mode initialised");
+}
+
 // Update the LED's colour and brightness
 void light_mode_update()
 {
-    switch_managment();
-    setting_mode();
+    switch_management();
+    setting_mode_update();
 }
 
+// Turn on the backlight when VALIDATE_BUTTON is pressed and light is off
 void backlight_update()
 {
     static unsigned long backlightStartTime = 0;
     static bool backlightActive = false;
 
-    if (switch_light_state())
+    if (switch_light_state() || menu_is_active())
     {
         digitalWrite(BACKLIGHT_PIN, LOW);
         backlightActive = false;
