@@ -1,4 +1,11 @@
+
+//Global libraries
+#include <Arduino.h>
+#include "config.h"
 #include "lighting.h"
+
+#define NUM_LEDS    67 //Number of Leds on the strip
+#define BRIGHTNESS  30 //Initialisation brightness at first power on
 
 CRGB leds[NUM_LEDS];
 bool lightState = false;

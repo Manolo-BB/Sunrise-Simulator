@@ -1,332 +1,333 @@
-#include "screen.h"
-#include "config.h"
+#include <Arduino.h>
+#include <GxEPD2_BW.h>
 
+//Fonts
+#include <Fonts/FreeMonoBold24pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold9pt7b.h>
+
+//Personal libraries
+#include "config.h"
+#include "screen.h"
+#include "rtc.h"
+
+#define ENABLE_GxEPD2_GFX 0
+
+//Display configuration
 GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT>
-display(
-    GxEPD2_290_BS(
-        DISPLAY_CS,
-        DISPLAY_DC,
-        DISPLAY_RES,
-        DISPLAY_BUSY
-    )
+display(GxEPD2_290_BS(
+            DISPLAY_CS,
+            DISPLAY_DC,
+            DISPLAY_RES,
+            DISPLAY_BUSY)
 );
 
 // Home time refresh window
-const int16_t timeWindowX = 55;
-const int16_t timeWindowY = 40;
-const uint16_t timeWindowW = 266;
-const uint16_t timeWindowH = 80;
+static const int16_t TIME_WINDOW_X = 55;
+static const int16_t TIME_WINDOW_Y = 40;
+static const uint16_t TIME_WINDOW_W = 266;
+static const uint16_t TIME_WINDOW_H = 50;
 
-// Time setting positions and refresh windows
-const int16_t settingHourX = 75;
-const int16_t settingHourY = 95;
-const uint16_t settingHourW = 65;
-const uint16_t settingHourH = 40;
+// Home date refresh window
+static const int16_t DATE_WINDOW_X = 140;
+static const int16_t DATE_WINDOW_Y = 105;
+static const uint16_t DATE_WINDOW_W = 150;
+static const uint16_t DATE_WINDOW_H = 23;
 
-const int16_t settingMinuteX = 155;
-const int16_t settingMinuteY = 95;
-const uint16_t settingMinuteW = 65;
-const uint16_t settingMinuteH = 40;
+// Time setting positions
+static const int16_t SETTING_HOUR_X = 75;
+static const int16_t SETTING_HOUR_Y = 95;
+static const uint16_t SETTING_HOUR_W = 65;
+static const uint16_t SETTING_HOUR_H = 40;
 
-const int16_t settingSeparatorX = 135;
-const int16_t settingSeparatorY = 95;
+static const int16_t SETTING_MINUTE_X = 155;
+static const int16_t SETTING_MINUTE_Y = 95;
+static const uint16_t SETTING_MINUTE_W = 65;
+static const uint16_t SETTING_MINUTE_H = 40;
 
-// Initialisation
+static const int16_t SETTING_SEPARATOR_X = 135;
+static const int16_t SETTING_SEPARATOR_Y = 95;
+
+// Date setting positions
+static const int16_t SETTING_DATE_X = 35;
+static const int16_t SETTING_DATE_Y = 95;
+static const uint16_t SETTING_DATE_W = 230;
+static const uint16_t SETTING_DATE_H = 40;
+
+
+// ========================================
+// Internal drawing functions
+// ========================================
+
+// Draw the current time centered on the display
+static void draw_time(uint8_t hour, uint8_t minute)
+{
+    char timeText[6];
+
+    //Make a string with the hour
+    snprintf( timeText, sizeof(timeText),"%02d:%02d", hour, minute);
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setTextColor(GxEPD_BLACK);
+
+    int16_t textX;
+    int16_t textY;
+    uint16_t textW;
+    uint16_t textH;
+
+    //Get the size of the string and center it on the display
+    display.getTextBounds(timeText, 0, 0, &textX, &textY, &textW,&textH);
+
+    int16_t x = (display.width() - textW) / 2 - textX;
+    int16_t y = (display.height() - textH) / 2 - textY;
+
+    display.setCursor(x, y);
+    display.print(timeText);
+}
+
+// Draw the current date
+static void draw_date(uint8_t day, uint8_t month, uint16_t year)
+{
+    char dateText[11];
+
+    snprintf(dateText, sizeof(dateText),"%02d/%02d/%04d",day,month,year);
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setTextColor(GxEPD_BLACK);
+
+    int16_t textX;
+    int16_t textY;
+    uint16_t textW;
+    uint16_t textH;
+
+    display.getTextBounds(dateText, 0, 0, &textX, &textY, &textW,&textH);
+    display.setCursor(display.width() - textW - 5,display.height() - 5);
+    display.print(dateText);
+}
+
+// Draw the date during date setting
+static void draw_setting_date(uint8_t day, uint8_t month,uint16_t year,uint8_t field, bool show)
+{
+    display.setFont(&FreeMonoBold12pt7b);
+    display.setTextColor(GxEPD_BLACK);
+
+    char dayText[3];
+    char monthText[3];
+    char yearText[5];
+
+    snprintf(dayText, sizeof(dayText), "%02d", day);
+    snprintf(monthText, sizeof(monthText), "%02d", month);
+    snprintf(yearText, sizeof(yearText), "%04d", year);
+
+    int16_t textX;
+    int16_t textY;
+    uint16_t dayW;
+    uint16_t dayH;
+    uint16_t monthW;
+    uint16_t monthH;
+    uint16_t yearW;
+    uint16_t yearH;
+    uint16_t separatorW;
+    uint16_t separatorH;
+
+    display.getTextBounds(dayText, 0, 0, &textX,&textY, &dayW,&dayH);
+    display.getTextBounds(monthText,0,0,&textX,&textY,&monthW,&monthH);
+    display.getTextBounds( yearText,0, 0,&textX, &textY, &yearW,&yearH);
+    display.getTextBounds( "/",0, 0,&textX,&textY, &separatorW, &separatorH );
+
+    uint16_t totalWidth = dayW + separatorW + monthW +separatorW + yearW;
+    int16_t startX = (display.width() - totalWidth) / 2;
+
+    // Day
+    if (field != 0 || show)
+    {
+        display.setCursor( startX, SETTING_DATE_Y);
+        display.print(dayText);
+    }
+    startX += dayW;
+
+    // First separator
+    display.setCursor( startX, SETTING_DATE_Y);
+    display.print("/");
+    startX += separatorW;
+
+    // Month
+    if (field != 1 || show)
+    {
+        display.setCursor( startX, SETTING_DATE_Y);
+        display.print(monthText);
+    }
+    startX += monthW;
+
+    // Second separator
+    display.setCursor(startX,SETTING_DATE_Y );
+    display.print("/");
+    startX += separatorW;
+
+    // Year
+    if (field != 2 || show)
+    {
+        display.setCursor(startX, SETTING_DATE_Y);
+        display.print(yearText);
+    }
+}
+
+// Draw one alarm icon
+// This function was entirely maid by an LLM
+static void draw_alarm_icon(int16_t x, int16_t y, uint8_t alarmNumber)
+{
+    // Alarm body
+    display.fillCircle(x + 14,y + 14, 11, GxEPD_BLACK);
+
+    // Left foot
+    display.fillRect( x + 5, y + 23, 6, 3, GxEPD_BLACK);
+
+    display.drawLine( x + 7, y + 24, x + 4,y + 28, GxEPD_BLACK);
+
+    // Right foot
+    display.fillRect( x + 17, y + 23, 6, 3,GxEPD_BLACK);
+    display.drawLine( x + 21, y + 24, x + 24, y + 28, GxEPD_BLACK);
+
+    // Left bell
+    display.fillTriangle( x + 4, y + 7, x + 0, y + 2, x + 7, y + 4, GxEPD_BLACK);
+
+    // Right bell
+    display.fillTriangle( x + 24, y + 7, x + 28, y + 2, x + 21, y + 4, GxEPD_BLACK);
+
+    // Alarm number
+    char numberText[3];
+
+    snprintf(numberText, sizeof(numberText),"%d", alarmNumber);
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setTextColor(GxEPD_WHITE);
+
+    int16_t textX;
+    int16_t textY;
+    uint16_t textW;
+    uint16_t textH;
+
+    display.getTextBounds( numberText,0,0,&textX,&textY, &textW,&textH);
+    display.setCursor( x + 14 - textW / 2 - textX, y + 14 - textH / 2 - textY);
+    display.print(numberText);
+}
+
+// Draw all active alarm icons
+static void draw_active_alarms( bool alarm1,bool alarm2, bool alarm3, bool alarm4, bool alarm5)
+{
+    const int16_t ALARM_START_X = 5;
+    const int16_t ALARM_Y = 5;
+    const int16_t ALARM_SPACING = 35;
+
+    int16_t x = ALARM_START_X;
+
+    if (alarm1)
+    {
+        draw_alarm_icon(x, ALARM_Y, 1);
+        x += ALARM_SPACING;
+    }
+
+    if (alarm2)
+    {
+        draw_alarm_icon(x, ALARM_Y, 2);
+        x += ALARM_SPACING;
+    }
+
+    if (alarm3)
+    {
+        draw_alarm_icon(x, ALARM_Y, 3);
+        x += ALARM_SPACING;
+    }
+
+    if (alarm4)
+    {
+        draw_alarm_icon(x, ALARM_Y, 4);
+        x += ALARM_SPACING;
+    }
+
+    if (alarm5)
+    {
+        draw_alarm_icon(x, ALARM_Y, 5);
+    }
+}
+
+// ===================================
+// Initialization
+// ===================================
 void screen_init()
 {
     display.init(115200, true, 50, false);
     display.setRotation(3);
     display.setFullWindow();
-    display.firstPage();
 
+    // Draws the display page by page to update the entire screen
+    display.firstPage();
     do
     {
         display.fillScreen(GxEPD_WHITE);
     }
     while (display.nextPage());
+    //We hibernate to switch the ESP into low power
     display.hibernate();
 }
 
-//Hour and minute display
-void screen_show_time(int hour, int minute)
+void screen_show_home_complete( uint8_t hour, uint8_t minute, bool alarm1, bool alarm2, bool alarm3, bool alarm4, bool alarm5)
 {
-    display.setRotation(3);
-    display.setFullWindow();
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setTextColor(GxEPD_BLACK);
-
-    char timeText[6];
-    snprintf(timeText, sizeof(timeText), "%02d:%02d", hour, minute);
-
-    int16_t tbx;
-    int16_t tby;
-    uint16_t tbw;
-    uint16_t tbh;
-
-    display.getTextBounds(timeText, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-    int16_t x = (display.width() - tbw) / 2 - tbx;
-    int16_t y = (display.height() - tbh) / 2 - tby;
-
-    display.firstPage();
-
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-        display.setCursor(x, y);
-        display.print(timeText);
-    }
-    while (display.nextPage());
-
-    display.hibernate();
-}
-
-//Add a function to draw an alarm icon with a number in the center
-//This function was maid by an LLM
-static void draw_alarm_icon(int16_t x, int16_t y, uint8_t alarmNumber)
-{
-    // Body
-    display.fillCircle(
-        x + 14,
-        y + 14,
-        11,
-        GxEPD_BLACK
-    );
-
-    // Left foot
-    display.fillRect(
-        x + 5,
-        y + 23,
-        6,
-        3,
-        GxEPD_BLACK
-    );
-
-    display.drawLine(
-        x + 7,
-        y + 24,
-        x + 4,
-        y + 28,
-        GxEPD_BLACK
-    );
-
-    // Right foot
-    display.fillRect(
-        x + 17,
-        y + 23,
-        6,
-        3,
-        GxEPD_BLACK
-    );
-
-    display.drawLine(
-        x + 21,
-        y + 24,
-        x + 24,
-        y + 28,
-        GxEPD_BLACK
-    );
-
-    // Left bell
-    display.fillTriangle(
-        x + 4,
-        y + 7,
-        x + 0,
-        y + 2,
-        x + 7,
-        y + 4,
-        GxEPD_BLACK
-    );
-
-    // Right bell
-    display.fillTriangle(
-        x + 24,
-        y + 7,
-        x + 28,
-        y + 2,
-        x + 21,
-        y + 4,
-        GxEPD_BLACK
-    );
-
-    // Draw the alarm number in the center of the icon
-    char numberText[3];
-
-    snprintf(numberText, sizeof(numberText), "%d", alarmNumber);
-
-    display.setFont(&FreeMonoBold9pt7b);
-    display.setTextColor(GxEPD_WHITE);
-
-    int16_t tbx;
-    int16_t tby;
-    uint16_t tbw;
-    uint16_t tbh;
-
-    display.getTextBounds(numberText, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-    int16_t textX = x + 14 - tbw / 2 - tbx;
-    int16_t textY = y + 14 - tbh / 2 - tby;
-
-    display.setCursor(textX, textY);
-    display.print(numberText);
-}
-
-
-// Display a single alarm icon with a number in the center
-void screen_show_alarm(uint8_t alarmNumber)
-{
-    display.setRotation(3);
-    display.setFullWindow();
-    display.firstPage();
-
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-        draw_alarm_icon(5, 5, alarmNumber);
-    }
-    while (display.nextPage());
-    display.hibernate();
-}
-
-// Display active alarms
-void screen_show_active_alarms(bool alarm1, bool alarm2, bool alarm3, bool alarm4, bool alarm5)
-{
-    display.setRotation(3);
-    display.setFullWindow();
-    display.firstPage();
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-        int16_t x = 5;
-        if (alarm1)
-        {
-            draw_alarm_icon(x, 5, 1);
-            x += 35;
-        }
-        if (alarm2)
-        {
-            draw_alarm_icon(x, 5, 2);
-            x += 35;
-        }
-        if (alarm3)
-        {
-            draw_alarm_icon(x, 5, 3);
-            x += 35;
-        }
-        if (alarm4)
-        {
-            draw_alarm_icon(x, 5, 4);
-            x += 35;
-        }
-        if (alarm5)
-        {
-            draw_alarm_icon(x, 5, 5);
-        }
-    }
-    while (display.nextPage());
-    display.hibernate();
-}
-
-// Display the hour at the center of the screen
-void draw_time(int hour, int minute)
-{
-    char timeText[6];
-    snprintf(timeText, sizeof(timeText), "%02d:%02d", hour, minute);
-
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setTextColor(GxEPD_BLACK);
-
-    int16_t tbx;
-    int16_t tby;
-    uint16_t tbw;
-    uint16_t tbh;
-
-    display.getTextBounds(timeText, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-    int16_t timeX = (display.width() - tbw) / 2 - tbx;
-    int16_t timeY = (display.height() - tbh) / 2 - tby;
-
-    display.setCursor(timeX, timeY);
-    display.print(timeText);
-}
-
-void screen_show_home_complete(int hour, int minute, bool alarm1, bool alarm2, bool alarm3, bool alarm4, bool alarm5)
-{
-    display.setRotation(3);
     display.setFullWindow();
     display.firstPage();
     do
     {
         display.fillScreen(GxEPD_WHITE);
 
+        // Time is depicted in its own dedicated space
         draw_time(hour, minute);
 
-        int16_t alarmX = 5;
-        const int16_t alarmSpacing = 35;
-        if (alarm1)
-        {
-            draw_alarm_icon(alarmX, 5, 1);
-            alarmX += alarmSpacing;
-        }
-        if (alarm2)
-        {
-            draw_alarm_icon(alarmX, 5, 2);
-            alarmX += alarmSpacing;
-        }
-        if (alarm3)
-        {
-            draw_alarm_icon(alarmX, 5, 3);
-            alarmX += alarmSpacing;
-        }
-        if (alarm4)
-        {
-            draw_alarm_icon(alarmX, 5, 4);
-            alarmX += alarmSpacing;
-        }
-        if (alarm5)
-        {
-            draw_alarm_icon(alarmX, 5, 5);
-        }
+        // Same for alarms and date
+        draw_active_alarms( alarm1, alarm2, alarm3, alarm4, alarm5);
+
+        // Date
+        draw_date( rtc_get_day(), rtc_get_month(), rtc_get_year());
     }
     while (display.nextPage());
     display.hibernate();
 }
 
-void screen_show_home(int hour, int minute)
+// Update only the time on the home screen
+void screen_show_home(uint8_t hour, uint8_t minute)
 {
-    display.setRotation(3);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setTextColor(GxEPD_BLACK);
-    display.setPartialWindow(
-        timeWindowX,
-        timeWindowY,
-        timeWindowW,
-        timeWindowH
-    );
-
+    display.setPartialWindow( TIME_WINDOW_X, TIME_WINDOW_Y, TIME_WINDOW_W, TIME_WINDOW_H);
     display.firstPage();
 
     do
     {
-        display.fillRect(
-            timeWindowX,
-            timeWindowY,
-            timeWindowW,
-            timeWindowH,
-            GxEPD_WHITE
-        );
-
+        display.fillScreen(GxEPD_WHITE);
         draw_time(hour, minute);
+
+    } while (display.nextPage());
+
+    display.hibernate();
+}
+
+// Update only the date on the home screen
+void screen_update_home_date()
+{
+    uint8_t day = rtc_get_day();
+    uint8_t month = rtc_get_month();
+    uint16_t year = rtc_get_year();
+
+    display.setPartialWindow( DATE_WINDOW_X, DATE_WINDOW_Y, DATE_WINDOW_W, DATE_WINDOW_H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        draw_date( day, month, year);
     }
     while (display.nextPage());
 
     display.hibernate();
 }
 
-
+// Parameter screen
 void screen_show_param_page(uint8_t selectedOption)
 {
-    display.setRotation(3);
     display.setFullWindow();
     display.firstPage();
 
@@ -334,45 +335,33 @@ void screen_show_param_page(uint8_t selectedOption)
     {
         display.fillScreen(GxEPD_WHITE);
 
+        // Title
         display.setTextColor(GxEPD_BLACK);
         display.setFont(&FreeMonoBold24pt7b);
         display.setCursor(15, 30);
         display.print("PARAMETERS");
 
-        //Time setting option
-        int16_t timeBoxX = 20;
-        int16_t timeBoxY = 45;
-        uint16_t timeBoxW = 256;
-        uint16_t timeBoxH = 30;
+        // Time setting option
+        const int16_t TIME_BOX_X = 20;
+        const int16_t TIME_BOX_Y = 45;
+        const uint16_t TIME_BOX_W = 256;
+        const uint16_t TIME_BOX_H = 30;
 
-        //Alarm setting option
-        int16_t alarmBoxX = 20;
-        int16_t alarmBoxY = 82;
-        uint16_t alarmBoxW = 256;
-        uint16_t alarmBoxH = 30;
+        // Alarm setting option
+        const int16_t ALARM_BOX_X = 20;
+        const int16_t ALARM_BOX_Y = 82;
+        const uint16_t ALARM_BOX_W = 256;
+        const uint16_t ALARM_BOX_H = 30;
 
+        // Time option
         if (selectedOption == 0)
         {
-            display.fillRect(
-                timeBoxX,
-                timeBoxY,
-                timeBoxW,
-                timeBoxH,
-                GxEPD_BLACK
-            );
-
+            display.fillRect( TIME_BOX_X, TIME_BOX_Y, TIME_BOX_W, TIME_BOX_H, GxEPD_BLACK);
             display.setTextColor(GxEPD_WHITE);
         }
         else
         {
-            display.drawRect(
-                timeBoxX,
-                timeBoxY,
-                timeBoxW,
-                timeBoxH,
-                GxEPD_BLACK
-            );
-
+            display.drawRect( TIME_BOX_X, TIME_BOX_Y, TIME_BOX_W, TIME_BOX_H,GxEPD_BLACK);
             display.setTextColor(GxEPD_BLACK);
         }
 
@@ -380,28 +369,15 @@ void screen_show_param_page(uint8_t selectedOption)
         display.setCursor(35, 66);
         display.print("Reglage Heure");
 
+        // Alarm option
         if (selectedOption == 1)
         {
-            display.fillRect(
-                alarmBoxX,
-                alarmBoxY,
-                alarmBoxW,
-                alarmBoxH,
-                GxEPD_BLACK
-            );
-
+            display.fillRect( ALARM_BOX_X, ALARM_BOX_Y, ALARM_BOX_W, ALARM_BOX_H, GxEPD_BLACK);
             display.setTextColor(GxEPD_WHITE);
         }
         else
         {
-            display.drawRect(
-                alarmBoxX,
-                alarmBoxY,
-                alarmBoxW,
-                alarmBoxH,
-                GxEPD_BLACK
-            );
-
+            display.drawRect( ALARM_BOX_X, ALARM_BOX_Y, ALARM_BOX_W, ALARM_BOX_H, GxEPD_BLACK);
             display.setTextColor(GxEPD_BLACK);
         }
 
@@ -413,7 +389,7 @@ void screen_show_param_page(uint8_t selectedOption)
     display.hibernate();
 }
 
-
+// Time setting screen
 void screen_show_time_setting_page()
 {
     uint8_t hour = rtc_get_hour();
@@ -424,44 +400,149 @@ void screen_show_time_setting_page()
 
     do
     {
-        // Fond blanc
         display.fillScreen(GxEPD_WHITE);
 
-        // Titre
+        // Title
         display.setFont(&FreeMonoBold9pt7b);
         display.setTextColor(GxEPD_BLACK);
-
         display.setCursor(85, 30);
         display.print("REGLAGE HEURE");
 
-        // Heure
+        // Hour
         display.setFont(&FreeMonoBold24pt7b);
-        display.setCursor(settingHourX, settingHourY);
+        display.setCursor( SETTING_HOUR_X, SETTING_HOUR_Y );
 
         if (hour < 10)
             display.print("0");
 
         display.print(hour);
 
-        // Deux-points
-        display.setCursor(settingSeparatorX, settingSeparatorY);
+        // Separator
+        display.setCursor(SETTING_SEPARATOR_X, SETTING_SEPARATOR_Y);
         display.print(":");
 
-        // Minutes
-        display.setCursor(settingMinuteX, settingMinuteY);
+        // Minute
+        display.setCursor(SETTING_MINUTE_X, SETTING_MINUTE_Y);
 
         if (minute < 10)
             display.print("0");
 
         display.print(minute);
-
     }
     while (display.nextPage());
 
     display.hibernate();
 }
 
+// Update hour during time setting
+void screen_update_setting_hour( uint8_t hour, bool show)
+{
+    display.setPartialWindow(SETTING_HOUR_X, SETTING_HOUR_Y - SETTING_HOUR_H, SETTING_HOUR_W, SETTING_HOUR_H);
+    display.firstPage();
 
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        if (show)
+        {
+            display.setFont(&FreeMonoBold24pt7b);
+            display.setTextColor(GxEPD_BLACK);
+            display.setCursor( SETTING_HOUR_X, SETTING_HOUR_Y );
+
+            if (hour < 10)
+                display.print("0");
+
+            display.print(hour);
+        }
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+// Update minute during time setting
+void screen_update_setting_minute( uint8_t minute, bool show)
+{
+    display.setPartialWindow( SETTING_MINUTE_X, SETTING_MINUTE_Y - SETTING_MINUTE_H,SETTING_MINUTE_W,SETTING_MINUTE_H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        if (show)
+        {
+            display.setFont(&FreeMonoBold24pt7b);
+            display.setTextColor(GxEPD_BLACK);
+            display.setCursor( SETTING_MINUTE_X, SETTING_MINUTE_Y );
+
+            if (minute < 10)
+                display.print("0");
+
+            display.print(minute);
+        }
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+// Date setting screen
+void screen_show_date_setting_page()
+{
+    uint8_t day = rtc_get_day();
+    uint8_t month = rtc_get_month();
+    uint16_t year = rtc_get_year();
+
+    display.setFullWindow();
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(85, 30);
+        display.print("REGLAGE DATE");
+        
+        display.setFont(&FreeMonoBold12pt7b);
+
+        char dateText[11];
+
+        snprintf( dateText, sizeof(dateText),"%02d/%02d/%04d", day, month, year);
+
+        int16_t textX;
+        int16_t textY;
+        uint16_t textW;
+        uint16_t textH;
+
+        display.getTextBounds( dateText, 0, 0, &textX, &textY,&textW,&textH);
+        display.setCursor( (display.width() - textW) / 2 - textX, SETTING_DATE_Y);
+        display.print(dateText);
+    }
+    while (display.nextPage());
+
+    display.hibernate();
+}
+
+// Update date during date setting
+void screen_update_setting_date(uint8_t day, uint8_t month, uint16_t year, uint8_t field, bool show)
+{
+    display.setPartialWindow( SETTING_DATE_X, SETTING_DATE_Y - SETTING_DATE_H,SETTING_DATE_W, SETTING_DATE_H);
+    display.firstPage();
+
+    do
+    {
+        display.fillScreen(GxEPD_WHITE);
+        draw_setting_date( day,month,year,field,show);
+    } while (display.nextPage());
+
+    display.hibernate();
+}
+
+// Alarm setting screen
 void screen_show_alarm_setting_page()
 {
     display.setRotation(3);
@@ -480,68 +561,6 @@ void screen_show_alarm_setting_page()
 
         display.setCursor(20, 75);
         display.print("ALARME");
-    }
-    while (display.nextPage());
-
-    display.hibernate();
-}
-
-
-void screen_update_setting_hour(uint8_t hour)
-{
-    display.setPartialWindow(
-        settingHourX,
-        settingHourY - settingHourH,
-        settingHourW,
-        settingHourH
-    );
-
-    display.firstPage();
-
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-
-        display.setFont(&FreeMonoBold24pt7b);
-        display.setTextColor(GxEPD_BLACK);
-
-        display.setCursor(settingHourX, settingHourY);
-
-        if (hour < 10)
-            display.print("0");
-
-        display.print(hour);
-    }
-    while (display.nextPage());
-
-    display.hibernate();
-}
-
-
-void screen_update_setting_minute(uint8_t minute)
-{
-    display.setPartialWindow(
-        settingMinuteX,
-        settingMinuteY - settingMinuteH,
-        settingMinuteW,
-        settingMinuteH
-    );
-
-    display.firstPage();
-
-    do
-    {
-        display.fillScreen(GxEPD_WHITE);
-
-        display.setFont(&FreeMonoBold24pt7b);
-        display.setTextColor(GxEPD_BLACK);
-
-        display.setCursor(settingMinuteX, settingMinuteY);
-
-        if (minute < 10)
-            display.print("0");
-
-        display.print(minute);
     }
     while (display.nextPage());
 

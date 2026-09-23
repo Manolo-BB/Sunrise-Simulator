@@ -1,15 +1,6 @@
 #ifndef RTC_H
 #define RTC_H
 
-//Global libraries
-#include <Arduino.h>
-#include <Wire.h>
-#include <RTClib.h>
-#include "config.h"
-
-// The RTC update takes place every 10 hours
-#define RTC_SYNC_INTERVAL 36000000UL
-
 void rtc_init();
 void rtc_update();
 

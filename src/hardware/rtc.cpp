@@ -1,4 +1,12 @@
+//Global libraries
+#include <Arduino.h>
+#include <Wire.h>
+#include <RTClib.h>
+#include "config.h"
 #include "rtc.h"
+
+// The RTC update takes place every 10 hours
+#define RTC_SYNC_INTERVAL 36000000UL
 
 //Rename the RTC module as rtc
 RTC_DS3231 rtc;
