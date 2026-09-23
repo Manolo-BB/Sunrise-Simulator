@@ -38,6 +38,29 @@ static void reset_blink()
     lastBlinkTime = millis();
 }
 
+// Return the number of days in the selected month
+static uint8_t days_in_month(uint8_t month, uint16_t year)
+{
+    switch (month)
+    {
+        case 2:
+            // Leap year
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
+                return 29;
+
+            return 28;
+
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            return 30;
+
+        default:
+            return 31;
+    }
+}
+
 // Apply the button counters to the current setting
 static void update_setting_value( uint8_t plusCount,uint8_t minusCount)
 {
@@ -73,8 +96,9 @@ static void update_setting_value( uint8_t plusCount,uint8_t minusCount)
 
         case CLOCK_SET_DAY:
         {
+            uint8_t maxDay = days_in_month(settingMonth,settingYear );
             int newDay = (int)settingDay + plusCount - minusCount;
-            newDay = ((newDay - 1) % 31 + 31) % 31 + 1;
+            newDay = ((newDay - 1) % maxDay + maxDay) % maxDay + 1;
             settingDay = newDay;
 
             break;
@@ -85,6 +109,12 @@ static void update_setting_value( uint8_t plusCount,uint8_t minusCount)
             int newMonth = (int)settingMonth + plusCount - minusCount;
             newMonth = ((newMonth - 1) % 12 + 12) % 12 + 1;
             settingMonth = newMonth;
+
+            // Adjust the day if the new month has fewer days
+            uint8_t maxDay = days_in_month( settingMonth, settingYear);
+
+            if (settingDay > maxDay)
+                settingDay = maxDay;
 
             break;
         }
@@ -97,6 +127,12 @@ static void update_setting_value( uint8_t plusCount,uint8_t minusCount)
                 newYear = 2000;
 
             settingYear = newYear;
+
+            // Adjust February 29 when changing the year
+            uint8_t maxDay = days_in_month( settingMonth, settingYear);
+
+            if (settingDay > maxDay)
+                settingDay = maxDay;
 
             break;
         }
