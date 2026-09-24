@@ -55,6 +55,14 @@ static bool settingEnabled = false;
 static unsigned long lastBlinkTime = 0;
 static bool blinkOn = true;
 
+// Setting days management
+static uint8_t selectedDay = 0;
+
+static unsigned long validatePressStartTime = 0;
+static bool validateLongHandled = false;
+
+#define VALIDATE_LONG_PRESS_TIME 1000
+
 #define BLINK_INTERVAL 500
 
 static void alarm_start_hour_setting();
@@ -71,6 +79,7 @@ static void alarm_update_sound_setting();
 
 static void alarm_start_days_setting();
 static void alarm_update_days_setting();
+static bool* alarm_get_selected_day_state();
 
 static void alarm_start_enabled_setting();
 static void alarm_update_enabled_setting();
@@ -307,24 +316,93 @@ static void alarm_update_sound_setting()
 //Days settings
 static void alarm_start_days_setting()
 {
-    button_clear_plus_minus_count();
-    button_clear_validate_count();
-    screen_show_days_setting_page( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday);
+    button_clear_all();
+
+    //Start on Monday
+    selectedDay = 0;
+    // Reset long-press detection
+    validatePressStartTime = 0;
+    validateLongHandled = false;
+
+    screen_show_days_setting_page( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday, selectedDay);
 }
 
 
 static void alarm_update_days_setting()
 {
-    // PLUS/MINUS work here to select
-
-    if (button_just_pressed(BUTTON_VALIDATE))
+    if (button_just_pressed(BUTTON_PLUS))
     {
-        settingStep = ALARM_SET_ENABLED;
+        selectedDay++;
+
+        if (selectedDay >= 7)
+            selectedDay = 0;
+
+        screen_update_days_setting( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday, selectedDay);
+    }
+
+    if (button_just_pressed(BUTTON_MINUS))
+    {
+        if (selectedDay == 0)
+            selectedDay = 6;
+        else
+            selectedDay--;
+
+        screen_update_days_setting( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday, selectedDay);
+    }
+
+    // Detect the beginning of a VALIDATE press
+    if (button_pressed(BUTTON_VALIDATE) &&  validatePressStartTime == 0)
+    {
+        validatePressStartTime = millis();
+        validateLongHandled = false;
+    }
+
+    // Detect a long VALIDATE press
+    if (button_pressed(BUTTON_VALIDATE) && !validateLongHandled &&  millis() - validatePressStartTime >= VALIDATE_LONG_PRESS_TIME)
+    {
+        validateLongHandled = true;
 
         button_clear_all();
 
+        settingStep = ALARM_SET_ENABLED;
+
         alarm_start_enabled_setting();
     }
+
+    // Detect the release of VALIDATE after a short press
+    if (!button_pressed(BUTTON_VALIDATE) && validatePressStartTime != 0)
+    {
+        unsigned long pressDuration = millis() - validatePressStartTime;
+
+        if (!validateLongHandled && pressDuration < VALIDATE_LONG_PRESS_TIME)
+        {
+            bool* selectedState = alarm_get_selected_day_state();
+
+            if (selectedState != nullptr)
+            {
+                *selectedState = !(*selectedState);
+            }
+            screen_update_days_setting( settingMonday, settingTuesday, settingWednesday, settingThursday, settingFriday, settingSaturday,settingSunday, selectedDay);
+        }
+        validatePressStartTime = 0;
+        validateLongHandled = false;
+    }
+}
+
+static bool* alarm_get_selected_day_state()
+{
+    switch (selectedDay)
+    {
+        case 0: return &settingMonday;
+        case 1: return &settingTuesday;
+        case 2: return &settingWednesday;
+        case 3: return &settingThursday;
+        case 4: return &settingFriday;
+        case 5: return &settingSaturday;
+        case 6: return &settingSunday;
+    }
+
+    return nullptr;
 }
 
 // Enabled settings

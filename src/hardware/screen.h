@@ -36,8 +36,8 @@ void screen_show_sound_setting_page(uint8_t sound);
 void screen_update_sound_setting(uint8_t sound);
 
 // Alarm days setting
-void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday, bool saturday, bool sunday);
-void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday, bool saturday, bool sunday);
+void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday, bool saturday, bool sunday, uint8_t selectedDay);
+void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday, bool saturday, bool sunday, uint8_t selectedDay);
 
 // Alarm enabled setting
 void screen_show_enabled_setting_page(bool enabled);

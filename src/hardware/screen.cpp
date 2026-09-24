@@ -849,7 +849,7 @@ void screen_update_sound_setting(uint8_t sound)
 }
 
 // Days settings
-void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday)
+void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday, uint8_t selectedDay)
 {
     display.setPartialWindow(  0, 0, display.width(), display.height());
     display.firstPage();
@@ -865,31 +865,38 @@ void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bo
 
         display.setFont(&FreeMonoBold9pt7b);
 
-        display.setCursor(70, 55);
+        display.setCursor(55, 55);
+        display.print(selectedDay == 0 ? "> " : "  ");
         display.print("LUN ");
         display.print(monday ? "X" : "-");
 
-        display.setCursor(150, 55);
+        display.setCursor(135, 55);
+        display.print(selectedDay == 1 ? "> " : "  ");
         display.print("MAR ");
         display.print(tuesday ? "X" : "-");
 
-        display.setCursor(70, 75);
+        display.setCursor(55, 75);
+        display.print(selectedDay == 2 ? "> " : "  ");
         display.print("MER ");
         display.print(wednesday ? "X" : "-");
 
-        display.setCursor(150, 75);
+        display.setCursor(135, 75);
+        display.print(selectedDay == 3 ? "> " : "  ");
         display.print("JEU ");
         display.print(thursday ? "X" : "-");
 
-        display.setCursor(70, 95);
+        display.setCursor(55, 95);
+        display.print(selectedDay == 4 ? "> " : "  ");
         display.print("VEN ");
         display.print(friday ? "X" : "-");
 
-        display.setCursor(150, 95);
+        display.setCursor(135, 95);
+        display.print(selectedDay == 5 ? "> " : "  ");
         display.print("SAM ");
         display.print(saturday ? "X" : "-");
 
-        display.setCursor(70, 115);
+        display.setCursor(55, 115);
+        display.print(selectedDay == 6 ? "> " : "  ");
         display.print("DIM ");
         display.print(sunday ? "X" : "-");
 
@@ -899,9 +906,9 @@ void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bo
     display.hibernate();
 }
 
-void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday)
+void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday, uint8_t selectedDay)
 {
-    screen_show_days_setting_page( monday, tuesday, wednesday, thursday, friday,saturday,sunday);
+    screen_show_days_setting_page( monday, tuesday, wednesday, thursday, friday,saturday,sunday, selectedDay);
 }
 
 //Enabled settings
