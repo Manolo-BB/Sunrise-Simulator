@@ -29,14 +29,14 @@ static bool wasMenuActive = false;
 void setup()
 {
     //Begin serial communication for debugging
-    //Serial.begin(115200);
+    Serial.begin(115200);
 
     //Hardware initialisation
     rtc_init();
     buttons_init();
-    screen_init();
-    sd_card_init();
+    sd_card_init(); //Be carefull and make the SD init before screen init to allow good initialization of both
     audio_init();
+    screen_init();
 
     //Modes initialisation
     light_mode_init();
@@ -46,9 +46,9 @@ void setup()
     //Initial display
     screen_show_home_complete(rtc_get_hour(), rtc_get_minute(), false, false, false, false, false);
 
-    // Serial.println("================================");
-    // Serial.println("        Sunrise Simulator       ");
-    // Serial.println("================================");
+    Serial.println("================================");
+    Serial.println("        Sunrise Simulator       ");
+    Serial.println("================================");
 }
 
 //Main function that runs continuously

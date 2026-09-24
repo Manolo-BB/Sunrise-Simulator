@@ -14,9 +14,10 @@ bool sd_card_init()
     // Initialise the SD card
     if (!SD.begin(SD_CS, SPI))
     {
+        Serial.println("SD card init failed");
         return false;
     }
-
+    Serial.println("SD card init successfull");
     return true;
 }
 

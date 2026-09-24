@@ -3,6 +3,7 @@
 
 #include "../hardware/button.h"
 #include "../hardware/screen.h"
+#include "../hardware/audio.h"
 
 struct Alarm
 {
@@ -131,8 +132,7 @@ static void alarm_update_hour_setting()
     // Validate hour
     if (validateCount > 0)
     {
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
 
         settingStep = ALARM_SET_MINUTE;
 
@@ -199,8 +199,7 @@ static void alarm_update_minute_setting()
     // Validate minute
     if (validateCount > 0)
     {
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
 
         settingStep = ALARM_SET_RISING_TIME;
 
@@ -250,8 +249,7 @@ static void alarm_update_rising_time_setting()
     // Validate rising time
     if (validateCount > 0)
     {
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
 
         screen_update_rising_time_setting( settingRisingTime);
 
@@ -264,10 +262,11 @@ static void alarm_update_rising_time_setting()
 //Sound settings
 static void alarm_start_sound_setting()
 {
-    button_clear_plus_minus_count();
-    button_clear_validate_count();
+    button_clear_all();
 
     screen_show_sound_setting_page( settingSound);
+    // Play the currently selected sound
+    audio_play_sound(settingSound);
 }
 
 static void alarm_update_sound_setting()
@@ -280,6 +279,7 @@ static void alarm_update_sound_setting()
             settingSound++;
 
         screen_update_sound_setting(settingSound);
+        audio_play_sound(settingSound);
     }
 
     if (button_just_pressed(BUTTON_PLUS))
@@ -290,14 +290,15 @@ static void alarm_update_sound_setting()
             settingSound--;
 
         screen_update_sound_setting(settingSound);
+        audio_play_sound(settingSound);
     }
 
     if (button_just_pressed(BUTTON_VALIDATE))
     {
+        audio_stop();
+        button_clear_all();
+        
         settingStep = ALARM_SET_DAYS;
-
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
 
         alarm_start_days_setting();
     }
@@ -320,8 +321,7 @@ static void alarm_update_days_setting()
     {
         settingStep = ALARM_SET_ENABLED;
 
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
 
         alarm_start_enabled_setting();
     }
@@ -349,8 +349,7 @@ static void alarm_update_enabled_setting()
 
     if (button_just_pressed(BUTTON_VALIDATE))
     {
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
 
         alarm_save_settings();
 
@@ -431,8 +430,7 @@ void alarm_update()
         selectionFinished = true;
         
         // Clear interrupts from the previous screen
-        button_clear_plus_minus_count();
-        button_clear_validate_count();
+        button_clear_all();
     }
 }
 
