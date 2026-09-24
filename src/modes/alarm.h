@@ -34,6 +34,8 @@ void alarm_setting_update();
 bool alarm_setting_finished();
 // Get alarm state
 bool alarm_is_enabled(uint8_t alarmIndex);
+bool alarm_is_scheduled_today(uint8_t alarmIndex);
+int8_t alarm_get_next_today();
 
 //Get alarm configuration
 uint8_t alarm_get_setting_hour();

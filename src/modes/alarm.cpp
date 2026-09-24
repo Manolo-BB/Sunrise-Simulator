@@ -4,6 +4,7 @@
 #include "../hardware/button.h"
 #include "../hardware/screen.h"
 #include "../hardware/audio.h"
+#include "../hardware/rtc.h"
 
 struct Alarm
 {
@@ -23,10 +24,10 @@ struct Alarm
 
 static Alarm alarms[NUMBER_OF_ALARMS] =
 {
-    {7,  0, 30, 1, true, true,  true,  true,  true,  false, false, false},
-    {7,  0, 30, 2, true, true,  true,  true,  true,  false, false, false},
-    {7,  0, 30, 3, true, true,  true,  true,  true,  false, false, false},
-    {7,  0, 30, 4, true, true,  true,  true,  true,  false, false, false},
+    {9,  0, 30, 1, true, true,  true,  true,  true,  false, false, false},
+    {10,  0, 30, 2, true, true,  true,  true,  true,  false, false, false},
+    {14,  0, 5, 3, true, true,  true,  true,  true,  false, false, false},
+    {18,  0, 30, 4, true, true,  true,  true,  true,  false, false, false},
     {7,  0, 30, 5, true, true,  true,  true,  true,  false, false, false},
 };
 
@@ -614,4 +615,59 @@ bool alarm_is_enabled(uint8_t alarmIndex)
         return false;
 
     return alarms[alarmIndex].enabled;
+}
+
+bool alarm_is_scheduled_today(uint8_t alarmIndex)
+{
+    if (alarmIndex >= NUMBER_OF_ALARMS)
+        return false;
+
+    if (!alarms[alarmIndex].enabled)
+        return false;
+
+    uint8_t day = rtc_get_weekday();
+
+    switch (day)
+    {
+        case 0: return alarms[alarmIndex].sunday;
+        case 1: return alarms[alarmIndex].monday;
+        case 2: return alarms[alarmIndex].tuesday;
+        case 3: return alarms[alarmIndex].wednesday;
+        case 4: return alarms[alarmIndex].thursday;
+        case 5: return alarms[alarmIndex].friday;
+        case 6: return alarms[alarmIndex].saturday;
+    }
+
+    return false;
+}
+
+int8_t alarm_get_next_today()
+{
+    int8_t nextAlarm = -1;
+    uint16_t nextAlarmTime = 1440; //The next alarm isn't the same day (24*60=1440)
+
+    uint16_t currentTime =
+        rtc_get_hour() * 60 +
+        rtc_get_minute();
+
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (!alarm_is_scheduled_today(i))
+            continue;
+
+        uint16_t alarmTime =
+            alarms[i].hour * 60 +
+            alarms[i].minute;
+
+        if (alarmTime < currentTime)
+            continue;
+
+        if (alarmTime < nextAlarmTime)
+        {
+            nextAlarmTime = alarmTime;
+            nextAlarm = i;
+        }
+    }
+
+    return nextAlarm;
 }

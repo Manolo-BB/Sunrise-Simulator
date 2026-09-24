@@ -175,3 +175,10 @@ uint16_t rtc_get_year()
     DateTime now = rtc.now();
     return now.year();
 }
+
+uint8_t rtc_get_weekday()
+{
+    DateTime now = rtc.now();
+
+    return now.dayOfTheWeek();
+}

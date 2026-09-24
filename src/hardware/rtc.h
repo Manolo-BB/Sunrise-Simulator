@@ -14,5 +14,6 @@ uint8_t rtc_get_minute();
 uint8_t rtc_get_day();
 uint8_t rtc_get_month();
 uint16_t rtc_get_year();
+uint8_t rtc_get_weekday();
 
 #endif
