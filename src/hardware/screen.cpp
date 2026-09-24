@@ -769,10 +769,7 @@ void screen_update_rising_time_setting(uint8_t risingTime)
     display.hibernate();
 }
 
-// =========================================================
-// SOUND SETTING
-// =========================================================
-
+// Sound settings
 void screen_show_sound_setting_page(uint8_t sound)
 {
     display.setFullWindow();
@@ -787,9 +784,9 @@ void screen_show_sound_setting_page(uint8_t sound)
         display.setCursor(70, 35);
         display.print("REGLAGE SON");
 
-        display.setFont(&FreeMonoBold24pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(125, 100);
-
+        display.print("ALARM");
         display.print(sound);
 
     }
@@ -797,7 +794,6 @@ void screen_show_sound_setting_page(uint8_t sound)
 
     display.hibernate();
 }
-
 
 void screen_update_sound_setting(uint8_t sound)
 {
@@ -825,20 +821,8 @@ void screen_update_sound_setting(uint8_t sound)
     display.hibernate();
 }
 
-
-// =========================================================
-// DAYS SETTING
-// =========================================================
-
-void screen_show_days_setting_page(
-    bool monday,
-    bool tuesday,
-    bool wednesday,
-    bool thursday,
-    bool friday,
-    bool saturday,
-    bool sunday
-)
+// Days settings
+void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday)
 {
     display.setFullWindow();
     display.firstPage();
@@ -888,33 +872,12 @@ void screen_show_days_setting_page(
     display.hibernate();
 }
 
-
-void screen_update_days_setting(
-    bool monday,
-    bool tuesday,
-    bool wednesday,
-    bool thursday,
-    bool friday,
-    bool saturday,
-    bool sunday
-)
+void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday)
 {
-    screen_show_days_setting_page(
-        monday,
-        tuesday,
-        wednesday,
-        thursday,
-        friday,
-        saturday,
-        sunday
-    );
+    screen_show_days_setting_page( monday, tuesday, wednesday, thursday, friday,saturday,sunday);
 }
 
-
-// =========================================================
-// ENABLED SETTING
-// =========================================================
-
+//Enabled settings
 void screen_show_enabled_setting_page(bool enabled)
 {
     display.setFullWindow();
@@ -942,7 +905,6 @@ void screen_show_enabled_setting_page(bool enabled)
 
     display.hibernate();
 }
-
 
 void screen_update_enabled_setting(bool enabled)
 {

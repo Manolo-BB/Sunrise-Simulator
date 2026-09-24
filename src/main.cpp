@@ -44,7 +44,7 @@ void setup()
     alarm_init();
 
     //Initial display
-    screen_show_home_complete(rtc_get_hour(), rtc_get_minute(), false, false, true, false, false);
+    screen_show_home_complete(rtc_get_hour(), rtc_get_minute(), false, false, false, false, false);
 
     // Serial.println("================================");
     // Serial.println("        Sunrise Simulator       ");
@@ -80,7 +80,7 @@ void loop()
     //Depending on the values of the internal variables, we adjust the display
     //If the user exits the menu, we redraw everything
     if (wasMenuActive && !menu_is_active()){
-        screen_show_home_complete(hour, minute, false, false, true, false, false);
+        screen_show_home_complete(hour, minute, false, false, false, false, false);
         lastDisplayedHour = hour;
         lastDisplayedMinute = minute;
     }

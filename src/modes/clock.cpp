@@ -172,22 +172,27 @@ static void next_setting_step()
     switch (settingStep)
     {
         case CLOCK_SET_HOUR:
+            screen_update_setting_hour(settingHour, true);
             settingStep = CLOCK_SET_MINUTE;
             break;
 
         case CLOCK_SET_MINUTE:
+            screen_update_setting_minute(settingMinute, true);
             settingStep = CLOCK_SET_DAY;
             break;
 
         case CLOCK_SET_DAY:
+            screen_update_setting_date( settingDay, settingMonth, settingYear,0,true);
             settingStep = CLOCK_SET_MONTH;
             break;
 
         case CLOCK_SET_MONTH:
+            screen_update_setting_date( settingDay, settingMonth, settingYear,1,true);
             settingStep = CLOCK_SET_YEAR;
             break;
 
         case CLOCK_SET_YEAR:
+            screen_update_setting_date( settingDay, settingMonth, settingYear,2,true);
             rtc_set_time(settingHour, settingMinute);
             rtc_set_date( settingDay,settingMonth,settingYear);
             settingFinished = true;
@@ -259,8 +264,10 @@ void clock_time_setting_update()
     uint8_t plusCount = button_get_plus_count();
     uint8_t minusCount = button_get_minus_count();
 
+    bool valueChanged = (plusCount > 0 || minusCount > 0);
+
     // Update the current value
-    if (plusCount > 0 || minusCount > 0)
+    if (valueChanged)
     {
         update_setting_value( plusCount,minusCount);
         update_setting_display(true);
