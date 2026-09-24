@@ -11,6 +11,7 @@ void rtc_set_date(uint8_t day, uint8_t month, uint16_t year);
 //Getters
 uint8_t rtc_get_hour();
 uint8_t rtc_get_minute();
+uint8_t rtc_get_second();
 uint8_t rtc_get_day();
 uint8_t rtc_get_month();
 uint16_t rtc_get_year();

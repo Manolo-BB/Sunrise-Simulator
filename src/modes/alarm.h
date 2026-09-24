@@ -3,9 +3,18 @@
 
 #include <Arduino.h>
 
+#define VALIDATE_LONG_PRESS_TIME 1000
+#define BLINK_INTERVAL 500
+
+
 #define NUMBER_OF_ALARMS 5
 // Maximum sunrise time in minutes
 #define MAX_RISING_TIME 45
+#define MIN_RISING_TIME 5
+
+#define SUNRISE_MAX_BRIGHTNESS   255
+#define SUNRISE_START_BRIGHTNESS 5
+#define SUNRISE_FULL_LIGHT_TIME  5
 
 enum AlarmSettingStep
 {
@@ -42,5 +51,9 @@ uint8_t alarm_get_setting_hour();
 uint8_t alarm_get_setting_minute();
 uint8_t alarm_get_setting_rising_time();
 uint8_t alarm_get_setting_sound();
+
+//Sunrise functions
+void alarm_sunrise_update();
+bool alarm_sunrise_is_active();
 
 #endif

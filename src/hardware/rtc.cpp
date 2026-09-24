@@ -158,6 +158,11 @@ uint8_t rtc_get_minute()
     return currentMinute;
 }
 
+uint8_t rtc_get_second()
+{
+    return currentSecond;
+}
+
 uint8_t rtc_get_day()
 {
     DateTime now = rtc.now();

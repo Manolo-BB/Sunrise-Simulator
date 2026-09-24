@@ -5,6 +5,7 @@
 #include "../hardware/screen.h"
 #include "../hardware/audio.h"
 #include "../hardware/rtc.h"
+#include "../hardware/lighting.h"
 
 struct Alarm
 {
@@ -62,9 +63,9 @@ static uint8_t selectedDay = 0;
 static unsigned long validatePressStartTime = 0;
 static bool validateLongHandled = false;
 
-#define VALIDATE_LONG_PRESS_TIME 1000
-
-#define BLINK_INTERVAL 500
+// Sunrise simulation state
+static uint8_t currentSunriseBrightness = 0;
+static bool sunriseActive = false;
 
 static void alarm_start_hour_setting();
 static void alarm_update_hour_setting();
@@ -86,6 +87,10 @@ static void alarm_start_enabled_setting();
 static void alarm_update_enabled_setting();
 
 static void alarm_save_settings();
+
+//Sunrise functions
+static uint8_t alarm_get_sunrise_brightness(uint8_t alarmIndex);
+static bool alarm_is_sunrise_active(uint8_t alarmIndex);
 
 static void alarm_start_hour_setting()
 {
@@ -247,7 +252,7 @@ static void alarm_update_rising_time_setting()
     // Decrease rising time
     while (minusCount--)
     {
-        if (settingRisingTime > 0)
+        if (settingRisingTime > MIN_RISING_TIME)
             settingRisingTime--;
     }
 
@@ -670,4 +675,104 @@ int8_t alarm_get_next_today()
     }
 
     return nextAlarm;
+}
+
+void alarm_sunrise_update()
+{
+    uint8_t highestBrightness = SUNRISE_START_BRIGHTNESS;
+    bool active = false;
+
+    // Check all alarms to find the highest required brightness
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (!alarm_is_sunrise_active(i))
+            continue;
+
+        active = true;
+
+        uint8_t brightness = alarm_get_sunrise_brightness(i);
+
+        if (brightness > highestBrightness)
+        {
+            highestBrightness = brightness;
+        }
+    }
+
+    sunriseActive = active;
+
+    if (!active)
+    {
+        return;
+    }
+
+    // Only update the LEDs when the brightness changes
+    if (highestBrightness != currentSunriseBrightness)
+    {
+        currentSunriseBrightness = highestBrightness;
+        set_brightness(currentSunriseBrightness);
+
+        if (!lighting_is_on())
+        {
+            lighting_on(CRGB::Yellow);
+        }
+
+        Serial.print("Sunrise brightness: ");
+        Serial.println(currentSunriseBrightness);
+    }
+}
+
+static uint8_t alarm_get_sunrise_brightness(uint8_t alarmIndex)
+{
+    uint16_t alarmTime = alarms[alarmIndex].hour * 60 + alarms[alarmIndex].minute;
+    uint8_t risingTime = alarms[alarmIndex].risingTime;
+    uint16_t currentTime = rtc_get_hour() * 60 + rtc_get_minute();
+
+    int sunriseStartTime = (int)alarmTime - risingTime;
+    int elapsedMinutes = currentTime - sunriseStartTime;
+
+    // Handle rising times shorter than the full-light period
+    if (risingTime <= SUNRISE_FULL_LIGHT_TIME)
+    {
+        return SUNRISE_MAX_BRIGHTNESS;
+    }
+
+    uint8_t rampMinutes = risingTime - SUNRISE_FULL_LIGHT_TIME;
+
+    // The final five minutes are at full brightness
+    if (elapsedMinutes >= rampMinutes)
+    {
+        return SUNRISE_MAX_BRIGHTNESS;
+    }
+
+    // Calculate the brightness increase per minute.
+    uint16_t brightnessStep = (SUNRISE_MAX_BRIGHTNESS - SUNRISE_START_BRIGHTNESS + rampMinutes - 1)/ rampMinutes;
+    uint16_t brightness = SUNRISE_START_BRIGHTNESS + elapsedMinutes * brightnessStep;
+
+    if (brightness > SUNRISE_MAX_BRIGHTNESS)
+    {
+        brightness = SUNRISE_MAX_BRIGHTNESS;
+    }
+    return (uint8_t)brightness;
+}
+
+static bool alarm_is_sunrise_active(uint8_t alarmIndex)
+{
+    if (alarmIndex >= NUMBER_OF_ALARMS)
+        return false;
+
+    if (!alarm_is_scheduled_today(alarmIndex))
+        return false;
+
+    uint16_t currentTime = rtc_get_hour() * 60 + rtc_get_minute();
+    uint16_t alarmTime = alarms[alarmIndex].hour * 60 + alarms[alarmIndex].minute;
+    uint8_t risingTime = alarms[alarmIndex].risingTime;
+
+    // Sunrise starts at least risingTime minutes before the alarm
+    int sunriseStartTime = (int)alarmTime - risingTime;
+    return currentTime >= sunriseStartTime &&  currentTime < alarmTime;
+}
+
+bool alarm_sunrise_is_active()
+{
+    return sunriseActive;
 }

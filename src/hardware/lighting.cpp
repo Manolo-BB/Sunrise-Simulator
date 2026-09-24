@@ -82,3 +82,11 @@ int brightness()
 {
     return FastLED.getBrightness();
 }
+
+//For sunrise simulation
+void set_brightness(uint8_t value)
+{
+    FastLED.setBrightness(value);
+    FastLED.show();
+}
+

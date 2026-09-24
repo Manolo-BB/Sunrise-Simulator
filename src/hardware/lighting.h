@@ -16,4 +16,7 @@ void increase_brightness();
 void decrease_brightness();
 int  brightness();
 
+//Sunrise simulation
+void set_brightness(uint8_t value);
+
 #endif
