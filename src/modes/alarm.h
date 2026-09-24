@@ -26,6 +26,13 @@ enum AlarmSettingStep
     ALARM_SET_ENABLED
 };
 
+enum AlarmState
+{
+    ALARM_INACTIVE,
+    ALARM_SUNRISE,
+    ALARM_DUE
+};
+
 // Alarm management
 void alarm_init();
 void alarm_start_setting();

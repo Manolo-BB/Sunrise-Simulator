@@ -61,7 +61,7 @@ void loop()
     alarm_sunrise_update();
     
     //We only adjust the colour and brightness of the light when the menu is not active (the ‘+’ and ‘-’ buttons are used for other functions within the menu)
-    if (!menu_is_active())
+    if (!menu_is_active() && !alarm_sunrise_is_active())
     {
         light_mode_update();
     }

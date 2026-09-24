@@ -28,8 +28,8 @@ static Alarm alarms[NUMBER_OF_ALARMS] =
     {9,  0, 30, 1, true, true,  true,  true,  true,  false, false, false},
     {10,  0, 30, 2, true, true,  true,  true,  true,  false, false, false},
     {14,  0, 5, 3, true, true,  true,  true,  true,  false, false, false},
-    {18,  0, 30, 4, true, true,  true,  true,  true,  false, false, false},
-    {7,  0, 30, 5, true, true,  true,  true,  true,  false, false, false},
+    {19,  00, 20, 4, true, true,  true,  true,  true,  false, false, true},
+    {18,  55, 30, 5, true, true,  true,  true,  true,  false, false, true},
 };
 
 // Alarm selection state
@@ -67,6 +67,12 @@ static bool validateLongHandled = false;
 static uint8_t currentSunriseBrightness = 0;
 static bool sunriseActive = false;
 
+// Indicates whether an alarm occurrence has already been handled today
+static bool alarmHandledToday[NUMBER_OF_ALARMS] = {false};
+// Indicates whether an alarm is currently ringing
+static bool alarmRinging[NUMBER_OF_ALARMS] = {false};
+static uint8_t lastAlarmDay = 255;
+
 static void alarm_start_hour_setting();
 static void alarm_update_hour_setting();
 
@@ -88,9 +94,15 @@ static void alarm_update_enabled_setting();
 
 static void alarm_save_settings();
 
+static AlarmState alarm_get_state(uint8_t alarmIndex);
+
 //Sunrise functions
 static uint8_t alarm_get_sunrise_brightness(uint8_t alarmIndex);
-static bool alarm_is_sunrise_active(uint8_t alarmIndex);
+
+static void alarm_check_new_day();
+static void alarm_start_ringing(uint8_t alarmIndex);
+static void alarm_validate(uint8_t alarmIndex);
+static void alarm_update_validation();
 
 static void alarm_start_hour_setting()
 {
@@ -679,45 +691,69 @@ int8_t alarm_get_next_today()
 
 void alarm_sunrise_update()
 {
+    alarm_check_new_day();
+    alarm_update_validation();
+
     uint8_t highestBrightness = SUNRISE_START_BRIGHTNESS;
     bool active = false;
 
     // Check all alarms to find the highest required brightness
     for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
     {
-        if (!alarm_is_sunrise_active(i))
-            continue;
+        AlarmState state = alarm_get_state(i);
 
-        active = true;
-
-        uint8_t brightness = alarm_get_sunrise_brightness(i);
-
-        if (brightness > highestBrightness)
+        if (state == ALARM_SUNRISE)
         {
-            highestBrightness = brightness;
+            active = true;
+            uint8_t brightness = alarm_get_sunrise_brightness(i);
+            if (brightness > highestBrightness)
+            {
+                highestBrightness = brightness;
+            }
         }
     }
 
     sunriseActive = active;
 
-    if (!active)
+    // Apply sunrise brightness
+    if (active)
     {
-        return;
-    }
+        if (highestBrightness != currentSunriseBrightness)
+        {
+            currentSunriseBrightness = highestBrightness;
 
-    // Only update the LEDs when the brightness changes
-    if (highestBrightness != currentSunriseBrightness)
-    {
-        currentSunriseBrightness = highestBrightness;
-        set_brightness(currentSunriseBrightness);
+            set_brightness(currentSunriseBrightness);
+
+            Serial.print("Sunrise brightness: ");
+            Serial.println(currentSunriseBrightness);
+        }
 
         if (!lighting_is_on())
         {
             lighting_on(CRGB::Yellow);
         }
+        else
+        {
+            FastLED.show();
+        }
+    }
 
-        Serial.print("Sunrise brightness: ");
-        Serial.println(currentSunriseBrightness);
+    // Check for alarms that have reached their wake-up time
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (alarm_get_state(i) == ALARM_DUE)
+        {
+            alarm_start_ringing(i);
+        }
+    }
+
+    // Turn the light off when no sunrise remains
+    if (!active)
+    {
+        if (lighting_is_on() && !audio_is_playing())
+        {
+            lighting_off();
+        }
     }
 }
 
@@ -755,24 +791,140 @@ static uint8_t alarm_get_sunrise_brightness(uint8_t alarmIndex)
     return (uint8_t)brightness;
 }
 
-static bool alarm_is_sunrise_active(uint8_t alarmIndex)
+bool alarm_sunrise_is_active()
+{
+    return sunriseActive;
+}
+
+static void alarm_check_new_day()
+{
+    uint8_t currentDay = rtc_get_day();
+
+    if (currentDay == lastAlarmDay)
+    {
+        return;
+    }
+
+    lastAlarmDay = currentDay;
+
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        alarmHandledToday[i] = false;
+        alarmRinging[i] = false;
+    }
+
+    Serial.println("New day: alarm states reset");
+}
+
+static AlarmState alarm_get_state(uint8_t alarmIndex)
 {
     if (alarmIndex >= NUMBER_OF_ALARMS)
-        return false;
+        return ALARM_INACTIVE;
 
     if (!alarm_is_scheduled_today(alarmIndex))
-        return false;
+        return ALARM_INACTIVE;
+
+    // This alarm occurrence has already been handled
+    if (alarmHandledToday[alarmIndex])
+        return ALARM_INACTIVE;
 
     uint16_t currentTime = rtc_get_hour() * 60 + rtc_get_minute();
     uint16_t alarmTime = alarms[alarmIndex].hour * 60 + alarms[alarmIndex].minute;
     uint8_t risingTime = alarms[alarmIndex].risingTime;
-
-    // Sunrise starts at least risingTime minutes before the alarm
     int sunriseStartTime = (int)alarmTime - risingTime;
-    return currentTime >= sunriseStartTime &&  currentTime < alarmTime;
+
+    if (currentTime < sunriseStartTime)
+    {
+        return ALARM_INACTIVE;
+    }
+
+    if (currentTime < alarmTime)
+    {
+        return ALARM_SUNRISE;
+    }
+    return ALARM_DUE;
 }
 
-bool alarm_sunrise_is_active()
+static void alarm_start_ringing(uint8_t alarmIndex)
 {
-    return sunriseActive;
+    if (alarmIndex >= NUMBER_OF_ALARMS)
+        return;
+
+    if (alarmHandledToday[alarmIndex])
+        return;
+
+    // Do not replace an alarm that is already ringing
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (alarmRinging[i])
+        {
+            return;
+        }
+    }
+
+    alarmRinging[alarmIndex] = true;
+
+    audio_play_sound(alarms[alarmIndex].sound);
+
+    Serial.print("Alarm ");
+    Serial.print(alarmIndex + 1);
+    Serial.println(" is ringing");
+}
+
+static void alarm_validate(uint8_t alarmIndex)
+{
+    if (alarmIndex >= NUMBER_OF_ALARMS)
+        return;
+
+    alarmHandledToday[alarmIndex] = true;
+    alarmRinging[alarmIndex] = false;
+
+    audio_stop();
+
+    Serial.print("Alarm ");
+    Serial.print(alarmIndex + 1);
+    Serial.println(" validated");
+}
+
+static void alarm_update_validation()
+{
+    if (!button_just_pressed(BUTTON_VALIDATE))
+    {
+        return;
+    }
+
+    // First priority: stop a ringing alarm
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (alarmRinging[i])
+        {
+            alarm_validate(i);
+            return;
+        }
+    }
+
+    // Otherwise, validate the earliest active sunrise
+    int8_t selectedAlarm = -1;
+    uint16_t selectedAlarmTime = 1440;
+
+    for (uint8_t i = 0; i < NUMBER_OF_ALARMS; i++)
+    {
+        if (alarm_get_state(i) != ALARM_SUNRISE)
+        {
+            continue;
+        }
+
+        uint16_t alarmTime = alarms[i].hour * 60 + alarms[i].minute;
+
+        if (alarmTime < selectedAlarmTime)
+        {
+            selectedAlarmTime = alarmTime;
+            selectedAlarm = i;
+        }
+    }
+
+    if (selectedAlarm >= 0)
+    {
+        alarm_validate(selectedAlarm);
+    }
 }
