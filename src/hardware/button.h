@@ -19,6 +19,7 @@ bool switch_light_state();
 bool button_pressed(Button button);
 bool button_just_pressed(Button button);
 void button_clear_press(Button button);
+void button_clear_all();
 
 int getButtonPin(Button button);
 unsigned long getLockTime(Button button);

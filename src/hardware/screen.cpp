@@ -556,7 +556,7 @@ void screen_show_alarm_setting_page(uint8_t selectedAlarm)
 
     if (!alarmPageDisplayed)
     {
-        display.setPartialWindow(  0, 0, display.width(), display.height());;
+        display.setPartialWindow(  0, 0, display.width(), display.height());
         display.firstPage();
 
         do
@@ -772,59 +772,86 @@ void screen_update_rising_time_setting(uint8_t risingTime)
 // Sound settings
 void screen_show_sound_setting_page(uint8_t sound)
 {
-    display.setFullWindow();
-    display.firstPage();
-
-    do
+    if (!soundPageDisplayed)
     {
-        display.fillScreen(GxEPD_WHITE);
-        display.setTextColor(GxEPD_BLACK);
+        display.setPartialWindow(  0, 0, display.width(), display.height());
+        display.firstPage();
 
-        display.setFont(&FreeMonoBold12pt7b);
-        display.setCursor(70, 35);
-        display.print("REGLAGE SON");
+        do
+        {
+            display.fillScreen(GxEPD_WHITE);
+            display.setTextColor(GxEPD_BLACK);
+            // Title
+            display.setFont(&FreeMonoBold12pt7b);
+            display.setCursor(60, 20);
+            display.print("REGLAGE SON");
 
-        display.setFont(&FreeMonoBold12pt7b);
-        display.setCursor(125, 100);
-        display.print("ALARM");
-        display.print(sound);
+            // Sound list
+            display.setFont(&FreeMonoBold9pt7b);
 
+            for (uint8_t i = 1; i <= 5; i++)
+            {
+                uint16_t y = 25 + i * 15;
+                display.setCursor(75, y);
+                if (i == sound)
+                    display.print("> ");
+                else
+                    display.print("  ");
+
+                display.print("Sound ");
+                display.print(i);
+            }
+
+        } while (display.nextPage());
+
+        soundPageDisplayed = true;
+        display.hibernate();
+
+        return;
     }
-    while (display.nextPage());
-
-    display.hibernate();
+    // Only update the alarm selection
+    screen_update_sound_setting(sound);
 }
 
 void screen_update_sound_setting(uint8_t sound)
 {
-    const int16_t X = 90;
-    const int16_t Y = 45;
-    const uint16_t W = 120;
-    const uint16_t H = 70;
+    const int16_t ALARM_WINDOW_X = 65;
+    const int16_t ALARM_WINDOW_Y = 35;
+    const uint16_t ALARM_WINDOW_W = 160;
+    const uint16_t ALARM_WINDOW_H = 80;
 
-    display.setPartialWindow(X, Y, W, H);
+   display.setPartialWindow( ALARM_WINDOW_X, ALARM_WINDOW_Y, ALARM_WINDOW_W, ALARM_WINDOW_H);
+
     display.firstPage();
 
     do
     {
         display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeMonoBold9pt7b);
         display.setTextColor(GxEPD_BLACK);
 
-        display.setFont(&FreeMonoBold24pt7b);
-        display.setCursor(125, 100);
+        for (uint8_t i = 1; i <= 5; i++)
+        {
+            uint16_t y = 25 + i * 15;
+            display.setCursor(75, y);
 
-        display.print(sound);
+            if (i == sound)
+                display.print("> ");
+            else
+                display.print("  ");
 
-    }
-    while (display.nextPage());
+            display.print("Sound ");
+            display.print(i);
+        }
 
+    } while (display.nextPage());
     display.hibernate();
 }
 
 // Days settings
 void screen_show_days_setting_page(bool monday, bool tuesday, bool wednesday, bool thursday, bool friday,bool saturday,bool sunday)
 {
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());
     display.firstPage();
 
     do
@@ -880,7 +907,7 @@ void screen_update_days_setting(bool monday, bool tuesday, bool wednesday, bool 
 //Enabled settings
 void screen_show_enabled_setting_page(bool enabled)
 {
-    display.setFullWindow();
+    display.setPartialWindow(  0, 0, display.width(), display.height());
     display.firstPage();
 
     do

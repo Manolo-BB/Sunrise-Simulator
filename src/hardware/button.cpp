@@ -58,7 +58,7 @@ void IRAM_ATTR validate_interrupt()
 {
     unsigned long now = micros();
 
-    if (now - lastValidateInterrupt >= DEBOUNCE_TIME * 5000UL)
+    if (now - lastValidateInterrupt >= DEBOUNCE_TIME * 10000UL)
     {
         if (validatePressCount < 255)
             validatePressCount++;
@@ -235,4 +235,13 @@ void button_clear_validate_count()
     validatePressCount = 0;
 
     interrupts();
+}
+
+void button_clear_all()
+{
+    button_clear_plus_minus_count();
+    button_clear_validate_count();
+    button_clear_press(BUTTON_PLUS);
+    button_clear_press(BUTTON_MINUS);
+    button_clear_press(BUTTON_VALIDATE);
 }

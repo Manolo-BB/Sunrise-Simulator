@@ -81,8 +81,7 @@ static void alarm_start_hour_setting()
     blinkOn = true;
     lastBlinkTime = millis();
 
-    button_clear_plus_minus_count();
-    button_clear_validate_count();
+    button_clear_all();
 
     screen_show_alarm_time_setting_page( settingHour,settingMinute );
 }
@@ -396,8 +395,7 @@ void alarm_start_setting()
     screen_reset_alarm_page();
 
      // Clear all pending button events before entering the alarm selection page
-    button_clear_plus_minus_count();
-    button_clear_validate_count();
+    button_clear_all();
 
     screen_show_alarm_setting_page(selectedAlarm);
 }
@@ -471,8 +469,7 @@ void alarm_start_alarm_setting()
     settingStep = ALARM_SET_HOUR;
     settingFinished = false;
 
-    button_clear_plus_minus_count();
-    button_clear_validate_count();
+    button_clear_all();
 
     alarm_start_hour_setting();
 }
